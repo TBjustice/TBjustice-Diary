@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -10,25 +10,8 @@
         var output, message;
         var Q_num = 0;
         var valid = 0;
-        var scale = 1;
-
-        window.onresize = resize;
-
-        function resize() {
-            var scalea = window.innerWidth / 900;
-            var scaleb = window.innerHeight / 800;
-            scale = scalea < scaleb ? scalea : scaleb;
-            scale = 1;
-            //document.body.style.transform = "scale(" + scale + ", " + scale + ")";
-        }
 
         function onLoad() {
-            var scalea = window.innerWidth / 850;
-            var scaleb = window.innerHeight / 750;
-            scale = scalea < scaleb ? scalea : scaleb;
-            scale = 1;
-            //document.body.style.transform = "scale(" + scale + ", " + scale + ")";
-            document.body.style.transform = "scale(1,1)";
             document.addEventListener("mousemove", onMove, false);
             document.addEventListener("touchmove", onMove, false);
             output = document.getElementById("output");
@@ -79,16 +62,15 @@
         function is_Inside(x, y) {
             for (var i = 0; i < valid; i++) {
                 var rect = answer_div[i].getBoundingClientRect();
-                console.log(rect.left / scale);
-                var ax1 = rect.left / scale;
-                var ay1 = rect.top / scale;
-                var ax2 = rect.right / scale;
-                var ay2 = rect.bottom / scale;
+                var ax1 = rect.left;
+                var ay1 = rect.top;
+                var ax2 = rect.right;
+                var ay2 = rect.bottom;
                 if (ax1 < x && ay1 < y && x < ax2 && y < ay2 && getChipPlace(i) == -1) {
                     return { x: ax1, y: ay1 , i: i };
                 }
             }
-            return { x: x - 48, y: y - 48, i: -1 };
+            return { x: x - 48, y: y - 48 , i: -1 };
         }
         
         var target = -1;
@@ -102,14 +84,14 @@
         function onMove(event) {
             event.preventDefault();
             if (target !== -1) {
-                target.style.top = (event.pageY / scale - 48) + "px";
-                target.style.left = (event.pageX / scale - 48) + "px";
+                target.style.top = (event.pageY - 48) + "px";
+                target.style.left = (event.pageX - 48) + "px";
             }
         }
         function onEnd(event) {
             event.preventDefault();
             if (target !== -1) {
-                var buf = is_Inside(event.pageX / scale, event.pageY / scale);
+                var buf = is_Inside(event.pageX, event.pageY);
                 target.style.left = buf.x + "px";
                 target.style.top = buf.y + "px";
                 setChipPlace(target, buf.i);
@@ -188,7 +170,7 @@
         }
     </script>
 </head>
-<body onload="onLoad()" style="transform-origin:top left;">
+<body onload="onLoad()">
     <h2 id="output" style="position:absolute; top:0px; left:0px; width:600px; height:80px;">漢文</h2>
     <div id="area1" style="position:absolute; top:80px; left:0px; width:400px; height:600px; background-color:#f8c6fa;"></div>
     <div id="area2" style="position:absolute; top:80px; left:400px; width:400px; height:600px; background-color:#acffac;">
