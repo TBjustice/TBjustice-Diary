@@ -11,13 +11,6 @@
         var Q_num = 0;
         var valid = 0;
         var scale = 1;
-        window.onresize = resize;
-        function resize() {
-            var scalea = window.innerWidth / 900;
-            var scaleb = window.innerHeight / 800;
-            scale = scalea < scaleb ? scalea : scaleb;
-            setTilePos();
-        }
         function onLoad() {
             var scalea = window.innerWidth / 900;
             var scaleb = window.innerHeight / 800;
