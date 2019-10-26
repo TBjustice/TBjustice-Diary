@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -83,14 +83,25 @@
         function onMove(event) {
             event.preventDefault();
             if (target !== -1) {
-                target.style.top = (event.pageY - 48*scale) + "px";
-                target.style.left = (event.pageX - 48*scale) + "px";
+                if (event.changedTouches) {
+                    target.style.top = (event.changedTouches[0].pageY - 48 * scale) + "px";
+                    target.style.left = (event.changedTouches[0].pageX - 48 * scale) + "px";
+                }
+                else {
+                    target.style.top = (event.pageY - 48 * scale) + "px";
+                    target.style.left = (event.pageX - 48 * scale) + "px";
+                }
             }
         }
         function onEnd(event) {
             event.preventDefault();
             if (target !== -1) {
-                var buf = is_Inside(event.pageX, event.pageY);
+                if (event.changedTouches) {
+                    var buf = is_Inside(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
+                }
+                else {
+                    var buf = is_Inside(event.pageX, event.pageY);
+                }
                 target.style.left = buf.x + "px";
                 target.style.top = buf.y + "px";
                 setChipPlace(target, buf.i);
