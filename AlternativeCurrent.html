@@ -1,0 +1,294 @@
+<!DOCTYPE html><html>
+<head>
+    <meta charset="UTF-8">
+    <title>RLC回路</title>
+    <script type="text/javascript">
+        var canvas;
+        var move = true;
+        function onCreate() {
+            canvas = document.getElementById("canvasRLC");
+            setInterval(onLoop, 30);
+        }
+
+        var r = 0;
+        var R = 0.5, L = 0, C = 0;
+        var V = [];
+        function onLoop() {
+            if (canvas.getContext) {
+                var context = canvas.getContext('2d');
+
+                if(move)r+=3;
+                r%=360;
+
+                context.beginPath();
+                context.fillStyle = "white";
+                context.fillRect(0, 0, 600, 300);
+
+                context.beginPath();
+                context.strokeStyle = "#0000ff";
+                context.arc(100, 150, 100, 0, 360);
+                context.stroke();
+
+                context.beginPath();
+                context.fillStyle = "#0000ff";
+                context.arc(Math.cos(r / 180 * Math.PI) * 100 + 100, -Math.sin(r / 180 * Math.PI) * 100 + 150, 6, 0, 360);
+                context.fill();
+
+                context.beginPath();
+                context.strokeStyle = "#0000ff";
+                context.moveTo(100, 150);
+                context.lineTo(Math.cos(r / 180 * Math.PI) * 100 + 100, -Math.sin(r / 180 * Math.PI) * 100 + 150);
+                context.lineTo(200, -Math.sin(r / 180 * Math.PI) * 100 + 150);
+                context.stroke();
+                context.beginPath();
+                context.fillStyle = "#0000ff";
+                context.arc(200, -Math.sin(r / 180 * Math.PI) * 100 + 150, 4, 0, 360);
+                context.fill();
+
+                for (var f1 = 0; f1 < 360; f1++) {
+                    context.beginPath();
+                    context.strokeStyle = "#0000ff";
+                    context.moveTo(200 + 360 - f1 - 1, 150 - Math.sin((f1 + r - 1) / 180 * Math.PI) * 100);
+                    context.lineTo(200 + 360 - f1, 150 - Math.sin((f1 + r) / 180 * Math.PI) * 100);
+                    context.stroke();
+                }
+
+                context.beginPath();
+                context.fillStyle = "#cccc00";
+                context.arc(R * Math.cos(r / 180 * Math.PI) * 100 + 100, -R * Math.sin(r / 180 * Math.PI) * 100 + 150, 6, 0, 360);
+                context.fill();
+                context.beginPath();
+                context.strokeStyle = "#cccc00";
+                context.moveTo(100, 150);
+                context.lineTo(R * Math.cos(r / 180 * Math.PI) * 100 + 100, -R * Math.sin(r / 180 * Math.PI) * 100 + 150);
+                context.stroke();
+
+                context.beginPath();
+                context.fillStyle = "#eeee00";
+                context.arc(L * Math.cos((r + 90) / 180 * Math.PI) * 100 + 100, -L * Math.sin((r + 90) / 180 * Math.PI) * 100 + 150, 6, 0, 360);
+                context.fill();
+                context.beginPath();
+                context.strokeStyle = "#eeee00";
+                context.moveTo(100, 150);
+                context.lineTo(L * Math.cos((r + 90) / 180 * Math.PI) * 100 + 100, -L * Math.sin((r + 90) / 180 * Math.PI) * 100 + 150);
+                context.stroke();
+
+                context.beginPath();
+                context.fillStyle = "#999900";
+                context.arc(C * Math.cos((r - 90) / 180 * Math.PI) * 100 + 100, -C * Math.sin((r - 90) / 180 * Math.PI) * 100 + 150, 6, 0, 360);
+                context.fill();
+                context.beginPath();
+                context.strokeStyle = "#999900";
+                context.moveTo(100, 150);
+                context.lineTo(C * Math.cos((r - 90) / 180 * Math.PI) * 100 + 100, -C * Math.sin((r - 90) / 180 * Math.PI) * 100 + 150);
+                context.stroke();
+
+                var add_Vx = R * Math.cos(r / 180 * Math.PI) * 100 + L * Math.cos((r + 90) / 180 * Math.PI) * 100 + C * Math.cos((r - 90) / 180 * Math.PI) * 100 + 100;
+                var add_Vy = -R * Math.sin(r / 180 * Math.PI) * 100 - L * Math.sin((r + 90) / 180 * Math.PI) * 100 - C * Math.sin((r - 90) / 180 * Math.PI) * 100 + 150;
+                context.beginPath();
+                context.fillStyle = "#ff0000";
+                context.arc(add_Vx, add_Vy, 6, 0, 360);
+                context.fill();
+                context.beginPath();
+                context.strokeStyle = "#ff0000";
+                context.moveTo(100, 150);
+                context.lineTo(add_Vx, add_Vy);
+                context.lineTo(200, add_Vy);
+                context.stroke();
+
+                for (var f1 = 0; f1 < 360; f1++) {
+                    var V = -R * Math.sin((r - f1) / 180 * Math.PI) * 100 - L * Math.sin((r + 90 - f1) / 180 * Math.PI) * 100 - C * Math.sin((r - 90 - f1) / 180 * Math.PI) * 100 + 150;
+                    context.beginPath();
+                    context.strokeStyle = "#ff0000";
+                    context.moveTo(200 + f1 - 1, V);
+                    context.lineTo(200 + f1, V);
+                    context.stroke();
+                }
+
+                context.beginPath();
+                context.strokeStyle = "black";
+                context.moveTo(0, 150);
+                context.lineTo(560, 150);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(100, 0);
+                context.lineTo(100, 300);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(200, 0);
+                context.lineTo(200, 300);
+                context.stroke();
+
+                context.beginPath();
+                context.strokeStyle = "black";
+                context.strokeRect(100, 0, 460, 300);
+            }
+        }
+
+        function reset() {
+            r = 0;
+        }
+
+        function changeR(value, a) {
+            R = value;
+            document.getElementById("evalR" + a).innerHTML = R;
+            reset();
+        }
+        function changeL(value, a) {
+            L = value;
+            document.getElementById("evalL" + a).innerHTML = L;
+            reset();
+        }
+        function changeC(value, a) {
+            C = value;
+            document.getElementById("evalC" + a).innerHTML = C;
+            reset();
+        }
+        function menu(a) {
+            if (a == 0) {
+                document.getElementById("div1a").style.display = "block";
+                document.getElementById("div2a").style.display = "none";
+                document.getElementById("div1b").style.display = "block";
+                document.getElementById("div2b").style.display = "none";
+                R = eval(document.getElementById("evalR0").innerHTML);
+                L = eval(document.getElementById("evalL0").innerHTML);
+                C = eval(document.getElementById("evalC0").innerHTML);
+            }
+            else if (a == 1){
+                document.getElementById("div1a").style.display = "none";
+                document.getElementById("div2a").style.display = "block";
+                document.getElementById("div1b").style.display = "none";
+                document.getElementById("div2b").style.display = "block";
+                R = eval(document.getElementById("evalR1").innerHTML);
+                L = eval(document.getElementById("evalL1").innerHTML);
+                C = eval(document.getElementById("evalC1").innerHTML);
+            }
+            else {
+                move = move?false:true;
+            }
+            reset();
+        }
+    </script>
+
+    <style>
+        #menu {
+            height: 40px;
+            width: 600px;
+            list-style-type: none;
+            background-color: #052d65;
+        }
+
+        #menuitem {
+            width: 300px;
+            height: inherit;
+            float: left;
+            text-align: center;
+            color: #ffffff;
+            background-color: #052d65;
+        }
+
+            #menuitem:hover {
+                color: #000000;
+                background-color: #00ffff;
+            }
+
+        #div2a {
+            display: none;
+        }
+        #div2b {
+            display: none;
+        }
+
+        div.R {
+            width: 600px;
+            background-color: #cccc66;
+            border: 2px solid #888844;
+            margin: 2px;
+        }
+
+        div.L {
+            width: 600px;
+            background-color: #eeee66;
+            border: 2px solid #666622;
+            margin: 2px;
+        }
+
+        div.C {
+            width: 600px;
+            background-color: #999900;
+            border: 2px solid #777700;
+            margin: 2px;
+        }
+        
+        #buttondiv{
+            height: 40px;
+            width: 100px;
+            background-color: #828282;
+        }
+    </style>
+</head>
+<body onload="onCreate()">
+    <div id="menu">
+        <div id="menuitem" onclick="menu(0)">RLC直列回路</div>
+        <div id="menuitem" onclick="menu(1)">RLC並列回路</div>
+    </div>
+    <h1></h1>
+    <div id="div1a">
+        <h1>RLC直列回路</h1>
+        <div class="R">
+            R = <span id="evalR0">0.5</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0.5"
+                   onchange="changeR(this.value, 0)" style="width:300px; height:20px;">
+        </div>
+        <div class="L">
+            L = <span id="evalL0">0</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0"
+                   onchange="changeL(this.value, 0)" style="width:300px; height:20px;">
+        </div>
+        <div class="C">
+            1/C = <span id="evalC0">0</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0"
+                   onchange="changeC(this.value, 0)" style="width:300px; height:20px;">
+        </div>
+    </div>
+    <div id="div2a">
+        <h1>RLC並列回路</h1>
+        <div class="R">
+            1/R = <span id="evalR1">0.5</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0.5"
+                   onchange="changeR(this.value, 1)" style="width:300px; height:20px;">
+        </div>
+        <div class="L">
+            1/L = <span id="evalL1">0</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0"
+                   onchange="changeL(-this.value, 1)" style="width:300px; height:20px;">
+        </div>
+        <div class="C">
+            C = <span id="evalC1">0</span>
+            <input type="range" name="num" min="0" max="1" step="0.1" value="0"
+                   onchange="changeC(-this.value, 1)" style="width:300px; height:20px;">
+        </div>
+    </div>
+    <br />
+    <canvas id="canvasRLC" width="600" height="300"></canvas><br />
+    <div id="buttondiv" onclick="menu(2)">Stop ⇄ Move</div>
+    <div id="div1b">
+        <br />
+        <h3><span style="color:#0000ff;">電流(基準)</span></h3>
+        <h3><span style="color:#cccc00;">抵抗にかかる電圧</span></h3>
+        <h3><span style="color:#eeee00;">コイルにかかる電圧</span></h3>
+        <h3><span style="color:#999900;">コンデンサーにかかる電圧</span></h3>
+        <h3><span style="color:#ff0000;">全体の電圧</span></h3>
+    </div>
+    <div id="div2b">
+        <br />
+        <h3><span style="color:#0000ff;">電圧(基準)</span></h3>
+        <h3><span style="color:#cccc00;">抵抗に流れる電流</span></h3>
+        <h3><span style="color:#eeee00;">コイルに流れる電流</span></h3>
+        <h3><span style="color:#999900;">コンデンサーに流れる電流</span></h3>
+        <h3><span style="color:#ff0000;">全体に流れる電流</span></h3>
+    </div>
+</body>
+</html>
+
+

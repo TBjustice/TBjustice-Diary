@@ -1,11 +1,95 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>My First Web Page</title>
+    <title>WebPageIndex_html</title>
+    <script>
+    var menuOpen = false;
+    function onClickSideMenu(a){
+      switch(a){
+        case 0:
+          if(menuOpen){
+            document.getElementById("sidemenu").style.opacity="0";
+            document.getElementById("space").style.width="100%";
+            menuOpen=false;
+          }
+          else{
+            document.getElementById("sidemenu").style.opacity="1";
+            document.getElementById("space").style.width="80%";
+            menuOpen=true;
+          }
+          break;
+      }
+    }
+    </script>
+    <style>
+        div.header-parent {
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            height: 90px;
+            width: 100%;
+            background-color: #111111;
+        }
+
+        p.header-child {
+            float: left;
+            margin: 3px;
+            font-size: 60px;
+            color: #ffffff;
+            vertical-align: top;
+        }
+
+        img.header-child {
+            float: right;
+            margin: 0px;
+        }
+
+        #space {
+            position: absolute;
+            top: 90px;
+            left: 0px;
+            height: auto;
+            transition: all 300ms ease;
+            width: 100%;
+        }
+
+        #sidemenu {
+            position: fixed;
+            top: 90px;
+            right: 0px;
+            min-width: 100px;
+            width: 20%;
+            height: 100%;
+            opacity: 0;
+            transition: all 300ms ease;
+            background-color: #aabb55;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello World</h1>
+    <div id="space">
+        <p id="space">
+            <h1>始めに</h1>
+            こんにちは！ゲームデベロッパーのTBjusticeと申します。<br />
+            このウェブサイトは、HTMLの勉強がてら、趣味の一環として作成した教育系ゲームなどを紹介しています。<br />
+            ここにアップしているゲームのソースコードは<a href="https://github.com/TBjustice/myWebPage_test">https://github.com/TBjustice/myWebPage_test</a>に公開していますので、興味があれば見てみたり改造してみたりして下さい。<br />
+
+            <a href="AlternativeCurrent.html"><h1>交流回路シミュレーター</h1></a>
+            <a href="%E6%BC%A2%E6%96%87.html"><h1>漢文学習アプリ</h1></a>
+        </p>
+    </div>
+    <div class="header-parent">
+        <img class="header-child" src="img/menu.png" width="90" height="90" onclick="onClickSideMenu(0)">
+        <a href="index.html">
+            <p class="header-child">ゲームで知識を増やす</p>
+        </a>
+        <div class="header-child"></div>
+    </div>
+    <div id="sidemenu">
+        <a href="index.html">
+            <h1>ホーム</h1>
+        </a>
+    </div>
 </body>
 </html>
-
