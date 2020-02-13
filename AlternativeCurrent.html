@@ -170,6 +170,7 @@
         }
     </script>
 
+    <link rel="stylesheet" href="style/headerStyle.css"/>
     <style>
         #menu {
             height: 40px;
@@ -219,7 +220,7 @@
             border: 2px solid #777700;
             margin: 2px;
         }
-        
+
         #buttondiv{
             height: 40px;
             width: 100px;
@@ -228,6 +229,25 @@
     </style>
 </head>
 <body onload="onCreate()">
+    <div class="header_menu">
+      <input type="checkbox" id="sidemenu">
+      <label for="sidemenu">
+        <div id="parent">
+          <div id="1" class="child"></div>
+          <div id="2" class="child"></div>
+          <div id="3" class="child"></div>
+        </div>
+      </label>
+      <div id="sidebar">
+        <a href="index.html">ホーム</a><br/>
+        <a href="AlternativeCurrent.html">交流回路シミュレーター</a><br/>
+        <a href="%E6%BC%A2%E6%96%87.html">漢文の句形パズル</a><br/>
+      </div>
+      <p>
+        ゲームで知識を増やす
+      </p>
+    </div>
+
     <div id="menu">
         <div id="menuitem" onclick="menu(0)">RLC直列回路</div>
         <div id="menuitem" onclick="menu(1)">RLC並列回路</div>
@@ -290,5 +310,3 @@
     </div>
 </body>
 </html>
-
-

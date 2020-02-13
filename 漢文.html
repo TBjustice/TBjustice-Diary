@@ -1,212 +1,233 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>漢文</title>
-    <script type="text/javascript">
-        var chip_div = [];
-        var chip_place = [];
-        var answer_div = [];
-        var output, message, area1, area2;
-        var Q_num = 0;
-        var valid = 0;
-        var scale = 1;
-        function onLoad() {
-            var scalea = window.innerWidth / 900;
-            var scaleb = window.innerHeight / 800;
-            scale = scalea < scaleb ? scalea : scaleb;
-            document.addEventListener("mousemove", onMove, false);
-            document.addEventListener("touchmove", onMove, false);
-            output = document.getElementById("output");
-            message = document.getElementById("message");
-            area1 = document.getElementById("area1");
-            area2 = document.getElementById("area2");
-            for (var i = 0; i < 15; i++) {
-                chip_div.push(document.getElementById("a" + (i + 1)));
-                chip_div[i].addEventListener("mousedown", onStart, false);
-                chip_div[i].addEventListener("mouseup", onEnd, false);
-                chip_div[i].addEventListener("touchstart", onStart, false);
-                chip_div[i].addEventListener("touchend", onEnd, false);
-                answer_div.push(document.getElementById("b" + (i + 1)));
-                chip_place.push(-1);
-            }
-            initQ();
-            setTile(Q_num);
-        }
-        function setChipPlace(_target, val){
-            for(var i=0; i < valid; i++){
-                if(chip_div[i]===_target){
-                    chip_place[i] = val;
-                }
-            }
-        }
-        function getChipPlace(val){
-            for(var i=0; i < valid; i++){
-                if(chip_place[i]===val){
-                    return i;
-                }
-            }
-            return -1;
-        }
-        function getTiles(){
-            var buf = "";
-            for(var i=0; i < valid; i++){
-                if(getChipPlace(i)!=-1){
-                    buf += chip_div[getChipPlace(i)].innerText;
-                }
-                else return "";
-            }
-            return "" + buf;
-        }
-        function is_Inside(x, y) {
-            for (var i = 0; i < valid; i++) {
-                var rect = answer_div[i].getBoundingClientRect();
-                var ax1 = rect.left;
-                var ay1 = rect.top;
-                var ax2 = rect.right;
-                var ay2 = rect.bottom;
-                if (ax1 < x && ay1 < y && x < ax2 && y < ay2 && getChipPlace(i) == -1) {
-                    return { x: ax1, y: ay1 , i: i };
-                }
-            }
-            return { x: x - 48*scale, y: y - 48*scale , i: -1 };
-        }
-        
-        var target = -1;
-        var z_index = 2;
-        function onStart(event) {
-            event.preventDefault();
-            target = event.target;
-            target.style.zIndex = z_index;
-            z_index++;
-        }
-        function onMove(event) {
-            event.preventDefault();
-            if (target !== -1) {
-                if (event.changedTouches) {
-                    target.style.top = (event.changedTouches[0].pageY - 48 * scale) + "px";
-                    target.style.left = (event.changedTouches[0].pageX - 48 * scale) + "px";
-                }
-                else {
-                    target.style.top = (event.pageY - 48 * scale) + "px";
-                    target.style.left = (event.pageX - 48 * scale) + "px";
-                }
-            }
-        }
-        function onEnd(event) {
-            event.preventDefault();
-            if (target !== -1) {
-                if (event.changedTouches) {
-                    var buf = is_Inside(event.changedTouches[0].pageX, event.changedTouches[0].pageY);
-                }
-                else {
-                    var buf = is_Inside(event.pageX, event.pageY);
-                }
-                target.style.left = buf.x + "px";
-                target.style.top = buf.y + "px";
-                setChipPlace(target, buf.i);
-            }
-            if(getTiles()===questions[Q_num].text1){
-                message.style.display="block";
-            }
-            target = -1;
-        }
-    </script>
-    <script type="text/javascript">
-        function Question(text1, text2){
-            this.text1 = text1;
-            this.text2 = text2;
-        }
-        var questions = [];
-        function initQ(){
-            var text_all = textData.split(",");
-            for(var i=0; i < text_all.length/2; i++){
-                questions.push(new Question(text_all[i*2], text_all[i*2+1]));
-            }
-            setrand();
-        }
-        function setrand(){
-            for(var i = 0; i<questions.length; i++){
-                var a = Math.floor(Math.random()*questions.length);
-                var buf = questions[a];
-                questions[a] = questions[i];
-                questions[i] = buf;
-            }
-        }
-        function setTile(a){
-            chip_place=[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
-            z_index = 2;
-            output.innerText = questions[a].text2;
-            var buf = questions[a].text1.concat();
-            var rand = [];
-            for(var i = 0; i < buf.length; i++){
-                rand.push(i);
-            }
-            for(var i = 0; i < buf.length; i++){
-                var b = Math.floor(Math.random()*buf.length);
-                var buf2 = rand[b];
-                rand[b] = rand[i];
-                rand[i] = buf2;
-            }
-            var text = "";
-            for(var i = 0; i < buf.length; i++){
-                text+=buf[rand[i]];
-            }
-            for(var i=0; i < text.length; i++){
-                chip_div[i].style.display = "block";
-                answer_div[i].style.display = "block";
-                chip_div[i].innerText = text[i];
-                chip_div[i].style.zIndex = 1;
-            }
-            for(var i=text.length; i < 15; i++){
-                chip_div[i].style.display = "none";
-                answer_div[i].style.display = "none";
-            }
-            valid = buf.length;
-            setTilePos();
-        }
-        function setTilePos(){
-            for(var i=0; i < 15; i++){
-                chip_div[i].style.top = (120*(i%5)+90)*scale + "px";
-                chip_div[i].style.left = (260-Math.floor(i/5)*110)*scale + "px";
-                chip_div[i].style.width = 96*scale + "px";
-                chip_div[i].style.height = 96*scale + "px";
-                chip_div[i].style.fontSize = 70*scale + "px";
+  <meta charset="UTF-8">
+  <title>漢文</title>
+  <script type="text/javascript">
+  var chip_div = [];
+  var chip_place = [];
+  var answer_div = [];
+  var output, message, area1, area2;
+  var Q_num = 0;
+  var valid = 0;
+  var scale = 1;
+  function onLoad() {
+    var scalea = window.innerWidth / 900;
+    var scaleb = window.innerHeight / 800;
+    scale = scalea < scaleb ? scalea : scaleb;
+    document.addEventListener("mousemove", onMove, false);
+    document.addEventListener("touchmove", onMove, false);
+    output = document.getElementById("output");
+    message = document.getElementById("message");
+    area1 = document.getElementById("area1");
+    area2 = document.getElementById("area2");
+    for (var i = 0; i < 15; i++) {
+      chip_div.push(document.getElementById("a" + (i + 1)));
+      chip_div[i].addEventListener("mousedown", onStart, false);
+      chip_div[i].addEventListener("mouseup", onEnd, false);
+      chip_div[i].addEventListener("touchstart", onStart, false);
+      chip_div[i].addEventListener("touchend", onEnd, false);
+      answer_div.push(document.getElementById("b" + (i + 1)));
+      chip_place.push(-1);
+    }
+    initQ();
+    setTile(Q_num);
+  }
+  function setChipPlace(_target, val){
+    for(var i=0; i < valid; i++){
+      if(chip_div[i]===_target){
+        chip_place[i] = val;
+      }
+    }
+  }
+  function getChipPlace(val){
+    for(var i=0; i < valid; i++){
+      if(chip_place[i]===val){
+        return i;
+      }
+    }
+    return -1;
+  }
+  function getTiles(){
+    var buf = "";
+    for(var i=0; i < valid; i++){
+      if(getChipPlace(i)!=-1){
+        buf += chip_div[getChipPlace(i)].innerText;
+      }
+      else return "";
+    }
+    return "" + buf;
+  }
+  function is_Inside(x, y) {
+    for (var i = 0; i < valid; i++) {
+      var rect = answer_div[i].getBoundingClientRect();
+      var ax1 = rect.left;
+      var ay1 = rect.top - 60;
+      var ax2 = rect.right;
+      var ay2 = rect.bottom - 60;
+      if (ax1 < x && ay1 < y && x < ax2 && y < ay2 && getChipPlace(i) == -1) {
+        return { x: ax1, y: ay1 , i: i };
+      }
+    }
+    return { x: x - 48*scale, y: y - 48*scale , i: -1 };
+  }
 
-                answer_div[i].style.top = (130 + 100*(i % 5))*scale + "px";
-                answer_div[i].style.left = (660 - 110*Math.floor(i / 5))*scale + "px";
-                answer_div[i].style.width = 96*scale + "px";
-                answer_div[i].style.height = 96*scale + "px";
-            }
-            output.style.width = 800*scale + "px";
-            output.style.height = 80*scale + "px";
-            output.style.fontSize = 30*scale + "px";
-            message.style.top = 250*scale + "px";
-            message.style.left = 100*scale + "px";
-            message.style.width = 200*scale + "px";
-            message.style.height = 100*scale + "px";
-            message.style.fontSize = 80*scale + "px";
+  var target = -1;
+  var z_index = 2;
+  function onStart(event) {
+    event.preventDefault();
+    target = event.target;
+    target.style.zIndex = z_index;
+    z_index++;
+  }
+  function onMove(event) {
+    event.preventDefault();
+    if (target !== -1) {
+      if (event.changedTouches) {
+        target.style.top = (event.changedTouches[0].pageY - 48 * scale - 60) + "px";
+        target.style.left = (event.changedTouches[0].pageX - 48 * scale) + "px";
+      }
+      else {
+        target.style.top = (event.pageY - 48 * scale - 60) + "px";
+        target.style.left = (event.pageX - 48 * scale) + "px";
+      }
+    }
+  }
+  function onEnd(event) {
+    event.preventDefault();
+    if (target !== -1) {
+      if (event.changedTouches) {
+        var buf = is_Inside(event.changedTouches[0].pageX, event.changedTouches[0].pageY - 60);
+      }
+      else {
+        var buf = is_Inside(event.pageX, event.pageY - 60);
+      }
+      target.style.left = buf.x + "px";
+      target.style.top = buf.y + "px";
+      setChipPlace(target, buf.i);
+    }
+    if(getTiles()===questions[Q_num].text1){
+      message.style.display="block";
+    }
+    target = -1;
+  }
+  </script>
+  <script type="text/javascript">
+  function Question(text1, text2){
+    this.text1 = text1;
+    this.text2 = text2;
+  }
+  var questions = [];
+  function initQ(){
+    var text_all = textData.split(",");
+    for(var i=0; i < text_all.length/2; i++){
+      questions.push(new Question(text_all[i*2], text_all[i*2+1]));
+    }
+    setrand();
+  }
+  function setrand(){
+    for(var i = 0; i<questions.length; i++){
+      var a = Math.floor(Math.random()*questions.length);
+      var buf = questions[a];
+      questions[a] = questions[i];
+      questions[i] = buf;
+    }
+  }
+  function setTile(a){
+    chip_place=[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+    z_index = 2;
+    output.innerText = questions[a].text2;
+    var buf = questions[a].text1.concat();
+    var rand = [];
+    for(var i = 0; i < buf.length; i++){
+      rand.push(i);
+    }
+    for(var i = 0; i < buf.length; i++){
+      var b = Math.floor(Math.random()*buf.length);
+      var buf2 = rand[b];
+      rand[b] = rand[i];
+      rand[i] = buf2;
+    }
+    var text = "";
+    for(var i = 0; i < buf.length; i++){
+      text+=buf[rand[i]];
+    }
+    for(var i=0; i < text.length; i++){
+      chip_div[i].style.display = "block";
+      answer_div[i].style.display = "block";
+      chip_div[i].innerText = text[i];
+      chip_div[i].style.zIndex = 1;
+    }
+    for(var i=text.length; i < 15; i++){
+      chip_div[i].style.display = "none";
+      answer_div[i].style.display = "none";
+    }
+    valid = buf.length;
+    setTilePos();
+  }
+  function setTilePos(){
+    for(var i=0; i < 15; i++){
+      chip_div[i].style.top = (120*(i%5)+90)*scale + "px";
+      chip_div[i].style.left = (260-Math.floor(i/5)*110)*scale + "px";
+      chip_div[i].style.width = 96*scale + "px";
+      chip_div[i].style.height = 96*scale + "px";
+      chip_div[i].style.fontSize = 70*scale + "px";
 
-            area1.style.top = 80*scale + "px";
-            area1.style.width = 400*scale + "px";
-            area1.style.height = 600*scale + "px";
+      answer_div[i].style.top = (130 + 100*(i % 5))*scale + "px";
+      answer_div[i].style.left = (660 - 110*Math.floor(i / 5))*scale + "px";
+      answer_div[i].style.width = 96*scale + "px";
+      answer_div[i].style.height = 96*scale + "px";
+    }
+    output.style.width = 800*scale + "px";
+    output.style.height = 80*scale + "px";
+    output.style.fontSize = 30*scale + "px";
+    message.style.top = 250*scale + "px";
+    message.style.left = 100*scale + "px";
+    message.style.width = 200*scale + "px";
+    message.style.height = 100*scale + "px";
+    message.style.fontSize = 80*scale + "px";
 
-            area2.style.top = 80*scale + "px";
-            area2.style.left = 400*scale + "px";
-            area2.style.width = 400*scale + "px";
-            area2.style.height = 600*scale + "px";
-        }
-        
-        var textData = "歳月不待人,歳月は人を待たない,人非木石皆有情,人は木や石ではない、みな感情がある,有備無患,備えがあれば心配はない,秦不敢動,秦はしいて動こうとはしなかった,穀不可勝食,穀物が多すぎて食べきれない,不者,そうでなければ,使人求之,これを人に探し求めさせた,天帝使我王百獣,天帝が私を百獣の王とした,百姓不見保,人民は保護されない,為叢竹所蔽,叢竹に覆われる,且為敵軍所虜,ちょうど敵に捕虜とされるところだ,利國莫若利百姓,国家を豊かにするには、人民を豊かにするのが一番良い,不得常見,いつも謁見できるとは限らない,民無信不立,人民に信用が無ければ(政治は)成り立たない,衆坐莫不嘆息,みんなため息をついている,客至未嘗不置酒,客が来れば、必ず酒を出してもてなした,不勝感嘆,感動を抑えられない,不足道也,言う必要もない";
-        function onClose(){
-            message.style.display="none";
-            Q_num++;
-            Q_num %= questions.length;
-            setTile(Q_num);
-        }
-    </script>
+    area1.style.top = 80*scale + "px";
+    area1.style.width = 400*scale + "px";
+    area1.style.height = 600*scale + "px";
+
+    area2.style.top = 80*scale + "px";
+    area2.style.left = 400*scale + "px";
+    area2.style.width = 400*scale + "px";
+    area2.style.height = 600*scale + "px";
+  }
+
+  var textData = "歳月不待人,歳月は人を待たない,人非木石皆有情,人は木や石ではない、みな感情がある,有備無患,備えがあれば心配はない,秦不敢動,秦はしいて動こうとはしなかった,穀不可勝食,穀物が多すぎて食べきれない,不者,そうでなければ,使人求之,これを人に探し求めさせた,天帝使我王百獣,天帝が私を百獣の王とした,百姓不見保,人民は保護されない,為叢竹所蔽,叢竹に覆われる,且為敵軍所虜,ちょうど敵に捕虜とされるところだ,利國莫若利百姓,国家を豊かにするには、人民を豊かにするのが一番良い,不得常見,いつも謁見できるとは限らない,民無信不立,人民に信用が無ければ(政治は)成り立たない,衆坐莫不嘆息,みんなため息をついている,客至未嘗不置酒,客が来れば、必ず酒を出してもてなした,不勝感嘆,感動を抑えられない,不足道也,言う必要もない";
+  function onClose(){
+    message.style.display="none";
+    Q_num++;
+    Q_num %= questions.length;
+    setTile(Q_num);
+  }
+  </script>
+  <link rel="stylesheet" href="style/headerStyle.css"/>
 </head>
 <body onload="onLoad()">
+  <div class="header_menu">
+    <input type="checkbox" id="sidemenu">
+    <label for="sidemenu">
+      <div id="parent">
+        <div id="1" class="child"></div>
+        <div id="2" class="child"></div>
+        <div id="3" class="child"></div>
+      </div>
+    </label>
+    <div id="sidebar">
+      <a href="index.html">ホーム</a><br/>
+      <a href="AlternativeCurrent.html">交流回路シミュレーター</a><br/>
+      <a href="%E6%BC%A2%E6%96%87.html">漢文の句形パズル</a><br/>
+    </div>
+    <p>
+      ゲームで知識を増やす
+    </p>
+  </div>
+
+  <div style="position: absolute; top 600px;">
     <div id="output" style="position:absolute; top:0px; left:0px; width:800px; height:80px; font-size:30px; vertical-align:top; ">漢文</div>
     <div id="area1" style="position:absolute; top:80px; left:0px; width:400px; height:600px; background-color:#f8c6fa;"></div>
     <div id="area2" style="position:absolute; top:80px; left:400px; width:400px; height:600px; background-color:#acffac;"></div>
@@ -247,5 +268,6 @@
     <div id="a14" style="position:absolute; top:450px; left:40px; width:96px; height:96px; background-color:#afffff; border:2px solid #0858fe; font-size:70px;"></div>
     <div id="a15" style="position:absolute; top:570px; left:40px; width:96px; height:96px; background-color:#afffff; border:2px solid #0858fe; font-size:70px;"></div>
     <div id="message" onclick="onClose()" style="position:absolute; top:250px; left:100px; width:200px; height:100px; background-color:#aaaaff; display:none; font-size:80px;">Next!</div>
+  </div>
 </body>
 </html>
