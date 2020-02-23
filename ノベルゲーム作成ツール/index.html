@@ -1,0 +1,484 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ページタイトルをここに書き込もう！</title>
+
+  <script type="text/javascript">
+  var nowSceneId = "開始時のシーン名";
+  </script>
+
+  <script type="text/storyscript" id="story">
+  #開始時のシーン名
+  **********
+  $message
+    こんにちは！述べるゲーム作成ツールへようこそ！
+    まずは基本事項を説明します！
+  $message
+    「#」と書くことでシーン名を設定します。このシーンは「開始時のシーン名」というシーン名です。
+    「***...(いくつでもOK)」と書くことで、初期設定とメッセージを区分けします。初期設定部では「背景画像」などを設定します。
+    「$message」と書いた次の行以降はメッセージとして扱われます。
+  ワンクリックで一行進みます。実際にコードと画面を見比べてみましょう。
+  $message
+    「$message」と再度書くとこのように今までのメッセージを消した上で新しいメッセージを開始します。
+  $message
+    背景が真っ黒で味気ないですね。背景画像をつける方法を学びましょう。
+  $goto:次のシーン
+
+  #次のシーン
+  $backgroundimage:背景.png
+  **********
+  $message
+  はい！背景画像が付きました！
+  背景画像は「初期設定」として扱われるので「***...」の前に書きます。
+  つまり、メッセージの途中で背景画像を変えたりすることはできません。
+  $message
+  「えっ？でも今変わったじゃん」と思いましたか？じつはこれ、次のシーンへと進んだんです！
+  先ほど書いたように各シーンには初期設定時に一つだけ背景画像を指定できます。
+  逆に言うと背景画像を変えたければ別のシーンへと移る必要があります。
+  $message
+  別のシーンへの遷移は簡単！まず別のシーンを作成(今回は「次のシーン」)
+  そして「goto:次のシーン名」のように書く。以上！
+  $message
+  これである程度ゲームが作れますね！
+  え、ストーリの分岐？なにそれおいしいの？
+  $yesno:ストーリの分岐とはおいしいのですか？:Yesの時に飛ぶシーン:Noの時に飛ぶシーン
+
+  #Yesの時に飛ぶシーン
+  **********************
+  $message
+    いや、おいしくないでしょ！
+  $goto:nextStep
+
+  #Noの時に飛ぶシーン
+  **********************
+  $message
+  大丈夫です。知ってます。
+  $goto:nextStep
+
+  #nextStep
+  **********
+  $message
+  こんな風にYes/No分岐のみが現時点で実装されています。
+  Yes/No分岐の実装方法は「$yesno:質問文:Yesの時に飛ぶシーン名:Noの時に飛ぶシーン名」
+  その他の条件分岐は、そのうち実装します......
+  $closemessage
+
+  </script>
+
+
+  <script type="text/javascript">
+  function Scene(head, body){
+    this.head = head;
+    this.body = body;
+    this.onarrowup = "";
+    this.onarrowdown = "";
+    this.onarrowleft = "";
+    this.onarrowright = "";
+
+    this.yes = function(){
+      nowSceneId = this.body[this.readLine].split(":")[2];
+      setTimeout(runScene, 10);
+    }
+    this.no = function(){
+      nowSceneId = this.body[this.readLine].split(":")[3];
+      setTimeout(runScene, 10);
+    }
+
+    this.run = function (){
+      this.draw();
+      this.readLine = -1;
+      this.isNowMessage = false;
+      this.next();
+    }
+
+    this.draw = function (){
+      arrowup.style.display = "none";
+      arrowdown.style.display = "none";
+      arrowleft.style.display = "none";
+      arrowright.style.display = "none";
+      context.fillStyle = "black";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      for(var i = 0; i < this.head.length; i++){
+        var linesegments = this.head[i].split(":");
+        switch (linesegments[0]) {
+          case "$backgroundimage":
+          drawImage(linesegments[1], 0, 0, 1, 1);
+          break;
+          case "$clickableitem":
+          if(linesegments[1].length == 0) break;
+          drawImage(linesegments[1], eval(linesegments[2]), eval(linesegments[3]), eval(linesegments[4]), eval(linesegments[5]));
+          break;
+          case "$IF":
+          if(!eval(convSentence(linesegments[1]))){
+            i++;
+          }
+          break;
+          case "$arrowup":
+          arrowup.style.display = "block";
+          this.onarrowup = linesegments[1];
+          break;
+          case "$arrowdown":
+          arrowdown.style.display = "block";
+          this.onarrowdown = linesegments[1];
+          break;
+          case "$arrowleft":
+          arrowleft.style.display = "block";
+          this.onarrowleft = linesegments[1];
+          break;
+          case "$arrowright":
+          arrowright.style.display = "block";
+          this.onarrowright = linesegments[1];
+          break;
+          case "$goto":
+          nowSceneId = linesegments[1];
+          setTimeout(runScene, 10);
+          break;
+          default:
+
+          break;
+        }
+      }
+    }
+
+    this.clicked = function(s, t){
+      if(this.isNowMessage) return;
+      var changed = false;
+      var x = s / canvas.width, y = t / canvas.height;
+      for(var i = 0; i < this.head.length; i++){
+        if(changed)break;
+        var linesegments = this.head[i].split(":");
+        switch (linesegments[0]) {
+          case "$clickableitem":
+          if(eval(linesegments[2]) < x && eval(linesegments[3]) < y && x < eval(linesegments[2]) + eval(linesegments[4]) && y < eval(linesegments[3]) + eval(linesegments[5])){
+            for(var j = 6; j < linesegments.length;){
+              switch (linesegments[j]){
+                case "$goto":
+                nowSceneId = linesegments[j + 1];
+                j+=2;
+                setTimeout(runScene, 10);
+                break;
+                case "$set":
+                items[linesegments[j + 1]] = eval(linesegments[j + 2]);
+                j+=3;
+                break;
+                default:
+                console.log("Error!");
+                j+=1;
+                break;
+              }
+            }
+            changed = true;
+          }
+          break;
+          case "$IF":
+          if(!eval(convSentence(linesegments[1]))){
+            i++;
+          }
+          default:
+
+          break;
+        }
+      }
+      if(changed) this.draw();
+    }
+
+    this.readLine = -1;
+    this.isNowMessage = false;
+    this.next = function(){
+      this.readLine++;
+      if(this.body[this.readLine].charAt(0) == "$"){
+        switch (this.body[this.readLine].split(":")[0]) {
+          case "$message":
+          messagebox.innerHTML = "";
+          messagebox.style.display = "block";
+          this.isNowMessage = true;
+          this.next();
+          break;
+          case "$goto":
+          nowSceneId = this.body[this.readLine].split(":")[1];
+          setTimeout(runScene, 10);
+          break;
+          case "$yesno":
+          messagebox.innerHTML = this.body[this.readLine].split(":")[1] +
+          "<br>" +
+          "<div onclick=\"onYesClick()\" style=\"display:inline-block; margin: 10px; background-color: #888888; font-size: 25px; width: 30%; text-align: center;\">YES</div>" +
+          "<div onclick=\"onNoClick()\" style=\"display:inline-block; margin: 10px; background-color: #888888; font-size: 25px; width: 30%; text-align: center;\">NO</div>";
+          messagebox.style.display = "block";
+          this.isNowMessage = false;
+          break;
+          case "$closemessage":
+          messagebox.innerHTML = "";
+          messagebox.style.display = "none";
+          this.isNowMessage = false;
+          break;
+          default:
+
+          break;
+        }
+      }
+      else{
+        if(this.isNowMessage) {
+          messagebox.innerHTML += this.body[this.readLine];
+        }
+      }
+    }
+  }
+  var scenes = {};
+  var items = {};
+
+  function compileStory(text) {
+    var lines = text.split("\n");
+    var sceneName = null;
+    var isHead = true;
+    var headScript = [];
+    var bodyScript = [];
+    for(var i=0; i<lines.length; i++){
+      lines[i] = lines[i].trim();
+      if(lines[i].length == 0) continue;
+      switch (lines[i].charAt(0)) {
+        case "!":
+        items[lines[i].substr(1)] = 0;
+        break;
+        case "#":
+        if(sceneName != null){
+          scenes[sceneName] = new Scene(headScript, bodyScript);
+        }
+        sceneName = lines[i].substr(1);
+        isHead = true;
+        headScript = [];
+        bodyScript = [];
+        break;
+        case "*":
+        isHead = false;
+        break;
+        default:
+        if(isHead) headScript.push(lines[i]);
+        else bodyScript.push(lines[i]);
+      }
+    }
+    if(sceneName != null){
+      scenes[sceneName] = new Scene(headScript, bodyScript);
+    }
+  }
+
+  </script>
+  <script type="text/javascript">
+  function replaceAll(str, str1, str2){
+    var result = str.replace(str1, str2);
+    while(result !== result.replace(str1, str2)){
+      result = result.replace(str1, str2);
+    }
+    return result;
+  }
+  function convSentence(str){
+    for (let key in items) {
+      str = replaceAll(str, key, "[" + String(items[key]) + "]");
+    }
+    return str;
+  }
+  </script>
+  <script type="text/javascript">
+  var arrowup, arrowdown, arrowleft, arrowright, messagebox, canvas, canvascontainer;
+  var context;
+  function onCreate(){
+    var storyScript = document.getElementById("story");
+    compileStory(story.text);
+    arrowup = document.getElementById("arrowup");
+    arrowdown = document.getElementById("arrowdown");
+    arrowleft = document.getElementById("arrowleft");
+    arrowright = document.getElementById("arrowright");
+    messagebox = document.getElementById("messagebox");
+    canvas = document.getElementById("canvas");
+    canvascontainer = document.getElementById("canvascontainer");
+    canvas.addEventListener("mousedown", onCanvasTapped, false);
+    canvas.width = canvascontainer.clientWidth;
+    canvas.height = canvascontainer.clientHeight;
+    context = canvas.getContext("2d");
+    window.addEventListener("resize", onWindowResized, false);
+    scenes[nowSceneId].run();
+  }
+
+  function onWindowResized(){
+    canvas.width = canvascontainer.clientWidth;
+    canvas.height = canvascontainer.clientHeight;
+    scenes[nowSceneId].draw()
+  }
+
+  function onCanvasTapped(event){
+    scenes[nowSceneId].clicked(event.pageX, event.pageY);
+  }
+
+  function onMessageClick(){
+    if(scenes[nowSceneId].isNowMessage){
+      scenes[nowSceneId].next();
+    }
+  }
+  function onYesClick(){
+    scenes[nowSceneId].yes();
+  }
+  function onNoClick(){
+    scenes[nowSceneId].no();
+  }
+
+  function onArrow(a){
+    switch (a) {
+      case 0:
+      nowSceneId = scenes[nowSceneId].onarrowup;
+      runScene();
+      break;
+      case 1:
+      nowSceneId = scenes[nowSceneId].onarrowdown;
+      runScene();
+      break;
+      case 2:
+      nowSceneId = scenes[nowSceneId].onarrowleft;
+      runScene();
+      break;
+      case 3:
+      nowSceneId = scenes[nowSceneId].onarrowright;
+      runScene();
+      break;
+      default:
+
+    }
+  }
+
+  function runScene(){
+    scenes[nowSceneId].run();
+  }
+
+  function ImageQueData(imagePath, a, b, c, d){
+    this.imagePath = imagePath;
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.d = d;
+  }
+  var imageQue = [];
+  var isImageQueActive = false;
+  function drawImage(imagePath, a, b, c, d){
+    imageQue.push(new ImageQueData(imagePath, a, b, c, d));
+    if(!isImageQueActive){
+      isImageQueActive = true;
+      imageQueProc();
+    }
+  }
+  function imageQueProc(){
+    const image = new Image();
+    image.addEventListener("load",function (){
+      context.drawImage(image, canvas.width * imageQue[0].a, canvas.height * imageQue[0].b, canvas.width * imageQue[0].c, canvas.height * imageQue[0].d);
+      imageQue.shift()
+      if(imageQue.length == 0) isImageQueActive = false;
+      else imageQueProc();
+    });
+    image.src = "img/" + imageQue[0].imagePath;
+  }
+  </script>
+  <style>
+  div.arrow{
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #000000;
+    position: absolute;
+    transition:all 100ms 0s ease;
+  }
+  div.arrow:hover{
+    background-color: #555555;
+  }
+  div.arrow div{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    border: 8px solid;
+    border-color: #ffffff #ffffff transparent transparent;
+  }
+
+  div.arrow[id="arrowup"]{
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    transform: rotate(-45deg);
+  }
+  div.arrow[id="arrowdown"]{
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    transform: rotate(135deg);
+  }
+  div.arrow[id="arrowleft"]{
+    top: 0;
+    left: 0;
+    bottom: 0;
+    margin: auto;
+    transform: rotate(-135deg);
+  }
+  div.arrow[id="arrowright"]{
+    top: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    transform: rotate(45deg);
+  }
+
+  @media screen and (orientation: portrait) {
+    #canvascontainer{
+      position: absolute;
+      top: 0vw;
+      left: 0vw;
+      width: 95vw;
+      height: 95vw;
+    }
+  }
+  @media screen and (orientation: landscape) {
+    #canvascontainer{
+      position: absolute;
+      top: 0vh;
+      left: 0vh;
+      width: 95vh;
+      height: 95vh;
+    }
+  }
+
+  #canvascontainer div[id="messagebox"]{
+    display: none;
+    background-color: #ffffffcf;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 65%;
+    height: 40%;
+    margin: auto;
+    font-weight: 600;
+    font-family: serif;
+    user-select: none;
+    overflow-y: scroll;
+  }
+
+  </style>
+</head>
+<body onload="onCreate()">
+  <div id="canvascontainer">
+    <canvas id="canvas"></canvas>
+    <div id="messagebox" onclick="onMessageClick()"></div>
+    <div class="arrow" id="arrowup" onclick="onArrow(0)">
+      <div></div>
+    </div>
+    <div class="arrow" id="arrowdown" onclick="onArrow(1)">
+      <div></div>
+    </div>
+    <div class="arrow" id="arrowleft" onclick="onArrow(2)">
+      <div></div>
+    </div>
+    <div class="arrow" id="arrowright" onclick="onArrow(3)">
+      <div></div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TBjusticeの日記</title>
+  <script>
+
+  </script>
+  <link rel="stylesheet" href="style/headerStyle.css"/>
+  <style>
+  div.firstIndex{
+    background: linear-gradient(to bottom right, #ffaaaa, #ffffdd);
+    border-radius: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 20px;
+    width: 70%;
+    height: auto;
+  }
+  div.firstIndex h1{
+    border-left: 5px solid #ff0000;
+    padding-left: 9px;
+  }
+
+  div.secondIndex{
+    background: linear-gradient(to bottom right, #aaffaa, #ddffff);
+    border-radius: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 20px;
+    width: 70%;
+    height: auto;
+  }
+  div.secondIndex h1{
+    border-left: 5px solid #00a000;
+    padding-left: 9px;
+  }
+
+  div.pageIcon{
+    display: inline-block;
+    width:225px;
+    height: 225px;
+    border: 3px solid #00ff00;
+    margin: 5px;
+
+    transition:all 100ms 0s ease;
+  }
+  div.pageIcon:hover{
+    transform: scale(1.02);
+    border: 3px solid #ffff00;
+  }
+
+  div.pageIcon p{
+    margin: 0px;
+  }
+  </style>
+</head>
+<body>
+  <div class="header_menu">
+    <input type="checkbox" id="sidemenu">
+    <label for="sidemenu">
+      <div id="parent">
+        <div id="1" class="child"></div>
+        <div id="2" class="child"></div>
+        <div id="3" class="child"></div>
+      </div>
+    </label>
+    <div id="sidebar">
+      <a href="index.html">ホーム</a><br/>
+      <a href="AlternativeCurrent.html">交流回路シミュレーター</a><br/>
+      <a href="%E6%BC%A2%E6%96%87.html">漢文の句形パズル</a><br/>
+    </div>
+    <p>
+      TBjusticeの日記
+    </p>
+  </div>
+
+  <div class = "firstIndex">
+    <h1>Abstract</h1>
+    こんにちは！ゲームデベロッパーのTBjusticeと申します。<br />
+    ここでは、「高校時代に作成した物理などに関する資料」を紹介しています。<br />
+    私は「学ぶことを楽しもう」をモットーに、学校などで習ったことに対し受け身になるのではなく
+    アウトプットすることで「楽しめる学び」を発見してきました。そしてできたのがこのウェブサイトです。
+    このサイトを見てくださった皆さんも、「楽しめる学び」を発見してください！<br />
+  </div>
+  <div class = "secondIndex">
+    <h1>Contents</h1>
+    <div class="pageIcon">
+      <a href="What_is_Wave.html">
+        <p>波と単振動</p>
+        <img src="img/wave.png" width="200px" height="200px">
+      </a>
+    </div>
+    <div class="pageIcon">
+      <a href="AlternativeCurrent.html">
+        <p>交流回路シミュレーター</p>
+        <img src="img/RLC.png" width="200px" height="200px">
+      </a>
+    </div>
+    <div class="pageIcon">
+      <a href="%E6%BC%A2%E6%96%87.html">
+        <p>漢文の句形パズル</p>
+        <img src="img/KANBUN.png" width="200px" height="200px">
+      </a>
+    </div>
+  </div>
+</body>
+</html>

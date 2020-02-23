@@ -1,0 +1,114 @@
+<!DOCTYPE html><html>
+<head>
+  <meta charset="UTF-8">
+  <title>波の解説</title>
+  <script type="text/javascript">
+    var r=0;
+    var canvas;
+    function OnCreate() {
+      canvas = document.getElementById('image-box');
+      setInterval(OnLoop, 30);
+    }
+
+    function OnLoop() {
+      if (canvas.getContext) {
+        var context = canvas.getContext('2d');
+        r+=3;
+        r%=360;
+
+        context.beginPath();
+        context.fillStyle = "white";
+        context.fillRect(0, 0, 600, 850);
+
+        context.beginPath();
+        context.fillStyle = "blue";
+        context.arc(Math.cos(r/180*Math.PI)*100+100, 100, 4, 0, 360);
+        context.fill();
+
+        context.beginPath();
+        context.strokeStyle = "blue";
+        context.moveTo(Math.cos(r/180*Math.PI)*100+100, 100);
+        context.lineTo(Math.cos(r/180*Math.PI)*100+100, -Math.sin(r/180*Math.PI)*100+100);
+        context.stroke();
+
+
+        context.beginPath();
+        context.fillStyle = "red";
+        context.arc(100, -Math.sin(r/180*Math.PI)*100+ 100, 4, 0, 360);
+        context.fill();
+
+        context.beginPath();
+        context.strokeStyle = "red";
+        context.moveTo(100, -Math.sin(r/180*Math.PI)*100 + 100);
+        context.lineTo(Math.cos(r/180*Math.PI)*100+100, -Math.sin(r/180*Math.PI)*100+100);
+        context.stroke();
+
+        context.beginPath();
+        context.fillStyle = "green";
+        context.arc(Math.cos(r/180*Math.PI)*100 + 100, -Math.sin(r/180*Math.PI)*100 + 100, 6, 0, 360);
+        context.fill();
+
+        context.beginPath();
+        context.strokeStyle = "green";
+        context.arc(100, 100, 100, 0, 360);
+        context.stroke();
+
+        context.beginPath();
+        context.strokeStyle = "black";
+        context.moveTo(0, 100);
+        context.lineTo(100 + 360, 100);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(100, 0);
+        context.lineTo(100, 200);
+        context.stroke();
+
+        context.beginPath();
+        context.strokeStyle = "black";
+        context.strokeRect(100, 0, 360, 200);
+        context.beginPath();
+
+        for(f1=0;f1<360;f1++){
+          context.beginPath();
+          context.strokeStyle = "blue";
+          context.moveTo(100 + 360 - f1-1, 100-Math.sin((f1+r-1)/180*Math.PI)*100);
+          context.lineTo(100 + 360 - f1, 100-Math.sin((f1+r)/180*Math.PI)*100);
+          context.stroke();
+        }
+
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style/headerStyle.css"/>
+</head>
+<body onload="OnCreate()">
+  <div class="header_menu">
+    <input type="checkbox" id="sidemenu">
+    <label for="sidemenu">
+      <div id="parent">
+        <div id="1" class="child"></div>
+        <div id="2" class="child"></div>
+        <div id="3" class="child"></div>
+      </div>
+    </label>
+    <div id="sidebar">
+      <a href="index.html">ホーム</a><br/>
+      <a href="AlternativeCurrent.html">交流回路シミュレーター</a><br/>
+      <a href="%E6%BC%A2%E6%96%87.html">漢文の句形パズル</a><br/>
+    </div>
+    <p>
+      TBjusticeの日記
+    </p>
+  </div>
+
+  <h1>波</h1>
+  <p>高校物理の範囲内では、波は「単振動が媒質中を伝わる現象」という認識であり、単振動とは「円運動を横から見た物」という認識です。</p>
+  <p>この「円運動を横から見た物」をわかりやすく動画にしたのが以下の図です。</p>
+  <canvas id="image-box" width="500" height="200"></canvas>
+  <p>sinカーブは「円筒を斜めに切ったもの」の展開図に現れ、洋服を作成する際の型紙に出てきます。</p>
+  <img src="img/sin.png" alt="sinカーブ" width="auto" height="auto">
+  <p>また、ゲーム開発時にも様々な用途で使われています。</p>
+  <p>そんな有能な「波」。というかsinカーブ。改めて眺めると、やっぱり美しいですよね(?)。</p>
+
+  </body>
+  </html>
