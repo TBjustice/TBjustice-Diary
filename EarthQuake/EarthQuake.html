@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8"/>
+  <title></title>
+  <script type="text/javascript">
+  var count_over3=[0,0,0,0,0,0];
+  var count_over2=[0,0,0,0,0,0];
+  var count_over1=[0,0,0,0,0,0];
+  var count_under1=[0,0,0,0,0,0];
+  var count_addition=[0,0,0,0,0,0];
+  var placedata=["長野県北部","長野県中部","長野県南部","岐阜県飛騨地方","岐阜県美濃東部","岐阜県美濃中西部"];
+
+  function makeTable(data, tableId){
+    var rows=[];
+    var table = document.createElement("table");
+
+    // 表に2次元配列の要素を格納
+    for(i = 0; i < data.length+1; i++){
+      rows.push(table.insertRow(-1));  // 行の追加
+      for(j = 0; j < data[0].length+1; j++){
+
+        if(i==0){
+          cell=rows[i].insertCell(-1);
+          if(j!=0){
+            cell.appendChild(document.createTextNode(placedata[j-1]));
+          }
+        }
+        else{
+          cell=rows[i].insertCell(-1);
+          if(j==0){
+            if(i==1)cell.appendChild(document.createTextNode("合計"));
+          }
+          else{
+            cell.appendChild(document.createTextNode(data[i-1][j-1]));
+          }
+        }
+        cell.style.backgroundColor="#eee";
+      }
+    }
+    document.getElementById(tableId).appendChild(table);
+  }
+
+  function data_analysis(place, M, name, index){
+    if(place.indexOf(name)!=-1){
+      count_addition[index]++;
+      if(M=="None"){
+        count_under1[index]++;
+      }
+      else if(parseFloat(M)>3){
+        count_over3[index]++;
+      }
+      else if(parseFloat(M)>2){
+        count_over2[index]++;
+      }
+      else if(parseFloat(M)>1){
+        count_over1[index]++;
+      }
+      else {
+        count_under1[index]++;
+      }
+    }
+  }
+
+
+  function getData() {
+    count_over3=[0,0,0,0,0,0];
+    count_over2=[0,0,0,0,0,0];
+    count_over1=[0,0,0,0,0,0];
+    count_under1=[0,0,0,0,0,0];
+    count_addition=[0,0,0,0,0,0];
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+      if (xmlhttp.readyState == 4) {
+        if (xmlhttp.status == 200) {
+          var text = xmlhttp.responseText;
+          var textbuf = text.split("-----------------------------------------------------------------------------------------")[1].split("</pre>")[0];
+          var line = textbuf.split(/\r\n|\r|\n/);
+          for(var i = 0; i < line.length;i++){
+            if(line[i].length > 58){
+              var year = line[i].slice(0,4);
+              var mon = line[i].slice(5,7);
+              var day = line[i].slice(8,10);
+              var time = line[i].slice(11,13);
+              var min = line[i].slice(14,16);
+              var sec = line[i].slice(17,21);
+              var longi = line[i].slice(23,32);
+              var latit = line[i].slice(33,43);
+              var depth = line[i].slice(45,48);
+              var M = line[i].slice(52,56);
+              if(M==" -  "){M="None";}
+              var place = line[i].slice(58);
+
+              data_analysis(place, M, placedata[0], 0);
+              data_analysis(place, M, placedata[1], 1);
+              data_analysis(place, M, placedata[2], 2);
+              data_analysis(place, M, placedata[3], 3);
+              data_analysis(place, M, placedata[4], 4);
+              data_analysis(place, M, placedata[5], 5);
+              data_analysis(place, M, placedata[6], 6);
+            }
+          }
+          var node=document.createTextNode(document.getElementById("filepath").value);
+          document.getElementById("output").appendChild(node);
+          var data = [
+            count_under1,
+            count_over1,
+            count_over2,
+            count_over3,
+            count_addition];
+            makeTable(data,"output");
+            document.getElementById("filepath").value=String(parseInt(document.getElementById("filepath").value, 10)+1)
+          } else {
+            alert("Error" + xmlhttp.status);
+          }
+        }
+      }
+
+      xmlhttp.open("GET", "http://www.data.jma.go.jp/svd/eqev/data/daily_map/" + document.getElementById("filepath").value + ".html");
+      xmlhttp.send();
+    }
+
+    function createXMLHttpRequest(){
+      if(window.XMLHttpRequest){return new XMLHttpRequest()}
+      if(window.ActiveXObject){
+        try{return new ActiveXObject("Msxml2.XMLHTTP.6.0")}catch(e){}
+        try{return new ActiveXObject("Msxml2.XMLHTTP.3.0")}catch(e){}
+        try{return new ActiveXObject("Microsoft.XMLHTTP")}catch(e){}
+      }
+      return false;
+    }
+
+    </script>
+  </head>
+  <body>
+    <input type="text" id="filepath" />
+    <input id="Button_Get" type="button" value="取得" onclick="getData();" />
+    <div id="output"></div>
+  </body>
+  </html>
