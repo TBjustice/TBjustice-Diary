@@ -1,0 +1,1302 @@
+﻿<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="shrine.js"></script>
+    <title>TrueBlueの冒険</title>
+    <script id="vertex1" type="vertex">
+        attribute vec3 position;
+        uniform vec4 color;
+        varying vec4 vColor;
+
+        uniform mat4 mMatrix,vMatrix,pMatrix;
+
+        void main(void){
+        gl_Position = pMatrix * vMatrix * mMatrix * vec4(position, 1.0);
+        vColor = color;
+        }
+    </script>
+    <script id="vertex2" type="vertex">
+        attribute vec3 position;
+        attribute vec4 color;
+        varying vec4 vColor;
+
+        uniform mat4 mMatrix, vMatrix, pMatrix;
+
+        void main(void){
+        gl_Position = pMatrix * vMatrix * mMatrix * vec4(position, 1.0);
+        vColor = color;
+        }
+    </script>
+    <script id="vertex3" type="vertex">
+        attribute vec3 position;
+        attribute vec3 normal;
+        uniform vec4 color;
+        uniform float shininess;
+
+        uniform vec4 sunLightCol;
+        uniform vec3 sunLightPos;
+
+        uniform vec4 defaultLightCol;
+
+        uniform mat4 mMatrix, vMatrix, vMatrix2, pMatrix;
+        varying vec4 vPosition;
+        varying vec4 vColor1;
+        varying vec4 vColor2;
+
+        vec4 calSunLight(){
+        vec3 L=normalize(sunLightPos);
+        vec3 N=normalize(mat3(mMatrix)*normal);
+        float dotLN=max(dot(L,N),0.0);
+        vec4 diffuse=vec4(dotLN, dotLN, dotLN, 1.0) * color * sunLightCol;
+        vec3 V=-normalize(vec3(vMatrix*mMatrix*vec4(position, 1.0)));
+        float dotNLEffect=ceil(dotLN);
+        vec3 R=mat3(vMatrix)*(2.0*dotLN*N-L);
+        float specularP=pow(max(dot(R,V),0.0),5.0)*dotNLEffect;
+        vec4 specular=shininess*specularP*sunLightCol;
+        return diffuse+specular;
+        }
+
+        void main(void){
+        gl_Position = pMatrix*vMatrix*mMatrix*vec4(position, 1.0);
+        vPosition = (vMatrix2*mMatrix*vec4(position, 1.0)) * vec4(0.05, 0.05, -0.05, 1.0);
+        vColor1 = calSunLight();
+        vColor2 = defaultLightCol * color;
+        }
+    </script>
+    <script id="vertex4" type="vertex">
+        attribute vec3 position;
+        attribute vec3 normal;
+        attribute vec4 color;
+        attribute float shininess;
+
+        uniform vec4 sunLightCol;
+        uniform vec3 sunLightPos;
+
+        uniform vec4 defaultLightCol;
+
+        uniform mat4 mMatrix, vMatrix, vMatrix2, pMatrix;
+        varying vec4 vPosition;
+        varying vec4 vColor1;
+        varying vec4 vColor2;
+
+        vec4 calSunLight(){
+        vec3 L=normalize(sunLightPos);
+        vec3 N=normalize(mat3(mMatrix)*normal);
+        float dotLN=max(dot(L,N),0.0);
+        vec4 diffuse=vec4(dotLN, dotLN, dotLN, 1.0) * color * sunLightCol;
+        vec3 V=-normalize(vec3(vMatrix*mMatrix*vec4(position, 1.0)));
+        float dotNLEffect=ceil(dotLN);
+        vec3 R=mat3(vMatrix)*(2.0*dotLN*N-L);
+        float specularP=pow(max(dot(R,V),0.0),5.0)*dotNLEffect;
+        vec4 specular=shininess*specularP*sunLightCol;
+        return diffuse+specular;
+        }
+
+        void main(void){
+        gl_Position = pMatrix*vMatrix*mMatrix*vec4(position, 1.0);
+        vPosition = (vMatrix2 * mMatrix * vec4(position, 1.0)) * vec4(0.05, 0.05, -0.05, 1.0);
+        vColor1 = calSunLight();
+        vColor2 = defaultLightCol * color;
+        }
+    </script>
+    <script id="vertex_shadow" type="vertex">
+        attribute vec3 position;
+        uniform mat4 mMatrix,vMatrix2;
+
+        varying vec4 vColor;
+
+        vec4 depth2RGBA(float depth){
+        float r = depth;
+        float g = fract(r * 255.0);
+        float b = fract(g * 255.0);
+        float a = fract(b * 255.0);
+        float coef = 1.0 / 255.0;
+        r -= g * coef;
+        g -= b * coef;
+        b -= a * coef;
+        return vec4(r, g, b, a);
+        }
+
+        void main(void){
+        gl_Position = (vMatrix2 * mMatrix * vec4(position, 1.0)) * vec4(0.05, 0.05, -0.05, 1.0);
+        vColor = depth2RGBA(gl_Position.z / 2.0 + 0.5);
+        }
+    </script>
+    <script id="fragment1" type="fragment">
+        precision mediump float;
+        varying vec4 vColor;
+
+        void main(void){
+        gl_FragColor = vColor;
+        }
+    </script>
+    <script id="fragment2" type="fragment">
+        precision mediump float;
+        varying vec4 vPosition;
+        varying vec4 vColor1;
+        varying vec4 vColor2;
+        uniform sampler2D texture;
+
+        float RGBA2Depth(vec4 RGBA){
+        const float rMask = 1.0;
+        const float gMask = 1.0 / 255.0;
+        const float bMask = 1.0 / (255.0 * 255.0);
+        const float aMask = 1.0 / (255.0 * 255.0 * 255.0);
+        float depth = dot(RGBA, vec4(rMask, gMask, bMask, aMask));
+        return depth;
+        }
+
+        void main(void){
+        float buf = RGBA2Depth(texture2D(texture, vPosition.xy * vec2(0.5, 0.5) + vec2(0.5, 0.5)));
+        if(buf + 0.01 < vPosition.z / 2.0 + 0.5){
+        gl_FragColor = vColor2;
+        }
+        else{
+        gl_FragColor = vColor1 + vColor2;
+        }
+        }
+    </script>
+    <script id="fragment_shadow" type="fragment">
+        precision mediump float;
+        varying vec4 vColor;
+
+        void main(void){
+        gl_FragColor = vColor;
+        }
+    </script>
+    <script type="text/javascript">
+        //Global Variable
+        var DEG2RAD = 3.1415926536 / 180;
+        var gl;
+
+        function _BufferUtil() {
+            this.createVBO = function (data) {
+                var vbo = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+                return vbo;
+            };
+            this.createIBO = function (data) {
+                var ibo = gl.createBuffer();
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(data), gl.STATIC_DRAW);
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+                return ibo;
+            };
+
+            this.bindVBO1 = function (location, vbo) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, 1, gl.FLOAT, false, 0, 0);
+            };
+            this.bindVBO3 = function (location, vbo) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, 3, gl.FLOAT, false, 0, 0);
+            };
+            this.bindVBO4 = function (location, vbo) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, 4, gl.FLOAT, false, 0, 0);
+            };
+            this.bindIBO = function (ibo) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+            };
+        };
+        var BufferUtil = new _BufferUtil();
+
+        function _Matrix4x4() {
+            this.create = function () {
+                var buf = new Float32Array(16);
+                buf[0] = 1; buf[1] = 0; buf[2] = 0; buf[3] = 0;
+                buf[4] = 0; buf[5] = 1; buf[6] = 0; buf[7] = 0;
+                buf[8] = 0; buf[9] = 0; buf[10] = 1; buf[11] = 0;
+                buf[12] = 0; buf[13] = 0; buf[14] = 0; buf[15] = 1;
+                return buf;
+            };
+            this.identify = function (buf) {
+                buf[0] = 1; buf[1] = 0; buf[2] = 0; buf[3] = 0;
+                buf[4] = 0; buf[5] = 1; buf[6] = 0; buf[7] = 0;
+                buf[8] = 0; buf[9] = 0; buf[10] = 1; buf[11] = 0;
+                buf[12] = 0; buf[13] = 0; buf[14] = 0; buf[15] = 1;
+                return buf;
+            };
+            this.multiply = function (a, b, result) {
+                var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
+                    a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7],
+                    a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11],
+                    a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
+                var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3],
+                    b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7],
+                    b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11],
+                    b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
+                result[0] = a0 * b0 + a4 * b1 + a8 * b2 + a12 * b3;
+                result[1] = a1 * b0 + a5 * b1 + a9 * b2 + a13 * b3;
+                result[2] = a2 * b0 + a6 * b1 + a10 * b2 + a14 * b3;
+                result[3] = a3 * b0 + a7 * b1 + a11 * b2 + a15 * b3;
+                result[4] = a0 * b4 + a4 * b5 + a8 * b6 + a12 * b7;
+                result[5] = a1 * b4 + a5 * b5 + a9 * b6 + a13 * b7;
+                result[6] = a2 * b4 + a6 * b5 + a10 * b6 + a14 * b7;
+                result[7] = a3 * b4 + a7 * b5 + a11 * b6 + a15 * b7;
+                result[8] = a0 * b8 + a4 * b9 + a8 * b10 + a12 * b11;
+                result[9] = a1 * b8 + a5 * b9 + a9 * b10 + a13 * b11;
+                result[10] = a2 * b8 + a6 * b9 + a10 * b10 + a14 * b11;
+                result[11] = a3 * b8 + a7 * b9 + a11 * b10 + a15 * b11;
+                result[12] = a0 * b12 + a4 * b13 + a8 * b14 + a12 * b15;
+                result[13] = a1 * b12 + a5 * b13 + a9 * b14 + a13 * b15;
+                result[14] = a2 * b12 + a6 * b13 + a10 * b14 + a14 * b15;
+                result[15] = a3 * b12 + a7 * b13 + a11 * b14 + a15 * b15;
+            };
+            this.translate = function (a, b, result) {
+                var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
+                    a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7],
+                    a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11],
+                    a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
+                result[0] = a0;
+                result[1] = a1;
+                result[2] = a2;
+                result[3] = a3;
+                result[4] = a4;
+                result[5] = a5;
+                result[6] = a6;
+                result[7] = a7;
+                result[8] = a8;
+                result[9] = a9;
+                result[10] = a10;
+                result[11] = a11;
+                result[12] = a0 * b[0] + a4 * b[1] + a8 * b[2] + a12;
+                result[13] = a1 * b[0] + a5 * b[1] + a9 * b[2] + a13;
+                result[14] = a2 * b[0] + a6 * b[1] + a10 * b[2] + a14;
+                result[15] = a3 * b[0] + a7 * b[1] + a11 * b[2] + a15;
+            };
+            this.scale = function (a, b, result) {
+                var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
+                    a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7],
+                    a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11],
+                    a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
+                result[0] = a0 * b[0];
+                result[1] = a1 * b[0];
+                result[2] = a2 * b[0];
+                result[3] = a3 * b[0];
+                result[4] = a4 * b[1];
+                result[5] = a5 * b[1];
+                result[6] = a6 * b[1];
+                result[7] = a7 * b[1];
+                result[8] = a8 * b[2];
+                result[9] = a9 * b[2];
+                result[10] = a10 * b[2];
+                result[11] = a11 * b[2];
+                result[12] = a12;
+                result[13] = a13;
+                result[14] = a14;
+                result[15] = a15;
+            };
+            this.rotateX = function (b, rad, result) {
+                var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3],
+                    b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7],
+                    b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11],
+                    b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
+                var a0 = 1, a1 = 0, a2 = 0, a3 = 0,
+                    a4 = 0, a5 = Math.cos(rad), a6 = Math.sin(rad), a7 = 0,
+                    a8 = 0, a9 = -Math.sin(rad), a10 = Math.cos(rad), a11 = 0,
+                    a12 = 0, a13 = 0, a14 = 0, a15 = 1;
+                result[0] = a0 * b0 + a4 * b1 + a8 * b2 + a12 * b3;
+                result[1] = a1 * b0 + a5 * b1 + a9 * b2 + a13 * b3;
+                result[2] = a2 * b0 + a6 * b1 + a10 * b2 + a14 * b3;
+                result[3] = a3 * b0 + a7 * b1 + a11 * b2 + a15 * b3;
+                result[4] = a0 * b4 + a4 * b5 + a8 * b6 + a12 * b7;
+                result[5] = a1 * b4 + a5 * b5 + a9 * b6 + a13 * b7;
+                result[6] = a2 * b4 + a6 * b5 + a10 * b6 + a14 * b7;
+                result[7] = a3 * b4 + a7 * b5 + a11 * b6 + a15 * b7;
+                result[8] = a0 * b8 + a4 * b9 + a8 * b10 + a12 * b11;
+                result[9] = a1 * b8 + a5 * b9 + a9 * b10 + a13 * b11;
+                result[10] = a2 * b8 + a6 * b9 + a10 * b10 + a14 * b11;
+                result[11] = a3 * b8 + a7 * b9 + a11 * b10 + a15 * b11;
+                result[12] = a0 * b12 + a4 * b13 + a8 * b14 + a12 * b15;
+                result[13] = a1 * b12 + a5 * b13 + a9 * b14 + a13 * b15;
+                result[14] = a2 * b12 + a6 * b13 + a10 * b14 + a14 * b15;
+                result[15] = a3 * b12 + a7 * b13 + a11 * b14 + a15 * b15;
+            };
+            this.rotateY = function (b, rad, result) {
+                var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3],
+                    b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7],
+                    b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11],
+                    b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
+                var a0 = Math.cos(rad), a1 = 0, a2 = -Math.sin(rad), a3 = 0,
+                    a4 = 0, a5 = 1, a6 = 0, a7 = 0,
+                    a8 = Math.sin(rad), a9 = 0, a10 = Math.cos(rad), a11 = 0,
+                    a12 = 0, a13 = 0, a14 = 0, a15 = 1;
+                result[0] = a0 * b0 + a4 * b1 + a8 * b2 + a12 * b3;
+                result[1] = a1 * b0 + a5 * b1 + a9 * b2 + a13 * b3;
+                result[2] = a2 * b0 + a6 * b1 + a10 * b2 + a14 * b3;
+                result[3] = a3 * b0 + a7 * b1 + a11 * b2 + a15 * b3;
+                result[4] = a0 * b4 + a4 * b5 + a8 * b6 + a12 * b7;
+                result[5] = a1 * b4 + a5 * b5 + a9 * b6 + a13 * b7;
+                result[6] = a2 * b4 + a6 * b5 + a10 * b6 + a14 * b7;
+                result[7] = a3 * b4 + a7 * b5 + a11 * b6 + a15 * b7;
+                result[8] = a0 * b8 + a4 * b9 + a8 * b10 + a12 * b11;
+                result[9] = a1 * b8 + a5 * b9 + a9 * b10 + a13 * b11;
+                result[10] = a2 * b8 + a6 * b9 + a10 * b10 + a14 * b11;
+                result[11] = a3 * b8 + a7 * b9 + a11 * b10 + a15 * b11;
+                result[12] = a0 * b12 + a4 * b13 + a8 * b14 + a12 * b15;
+                result[13] = a1 * b12 + a5 * b13 + a9 * b14 + a13 * b15;
+                result[14] = a2 * b12 + a6 * b13 + a10 * b14 + a14 * b15;
+                result[15] = a3 * b12 + a7 * b13 + a11 * b14 + a15 * b15;
+            };
+            this.rotateZ = function (b, rad, result) {
+                var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3],
+                    b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7],
+                    b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11],
+                    b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
+                var a0 = Math.cos(rad), a1 = Math.sin(rad), a2 = 0, a3 = 0,
+                    a4 = -Math.sin(rad), a5 = Math.cos(rad), a6 = 0, a7 = 0,
+                    a8 = 0, a9 = 0, a10 = 0, a11 = 0,
+                    a12 = 0, a13 = 0, a14 = 0, a15 = 1;
+                result[0] = a0 * b0 + a4 * b1 + a8 * b2 + a12 * b3;
+                result[1] = a1 * b0 + a5 * b1 + a9 * b2 + a13 * b3;
+                result[2] = a2 * b0 + a6 * b1 + a10 * b2 + a14 * b3;
+                result[3] = a3 * b0 + a7 * b1 + a11 * b2 + a15 * b3;
+                result[4] = a0 * b4 + a4 * b5 + a8 * b6 + a12 * b7;
+                result[5] = a1 * b4 + a5 * b5 + a9 * b6 + a13 * b7;
+                result[6] = a2 * b4 + a6 * b5 + a10 * b6 + a14 * b7;
+                result[7] = a3 * b4 + a7 * b5 + a11 * b6 + a15 * b7;
+                result[8] = a0 * b8 + a4 * b9 + a8 * b10 + a12 * b11;
+                result[9] = a1 * b8 + a5 * b9 + a9 * b10 + a13 * b11;
+                result[10] = a2 * b8 + a6 * b9 + a10 * b10 + a14 * b11;
+                result[11] = a3 * b8 + a7 * b9 + a11 * b10 + a15 * b11;
+                result[12] = a0 * b12 + a4 * b13 + a8 * b14 + a12 * b15;
+                result[13] = a1 * b12 + a5 * b13 + a9 * b14 + a13 * b15;
+                result[14] = a2 * b12 + a6 * b13 + a10 * b14 + a14 * b15;
+                result[15] = a3 * b12 + a7 * b13 + a11 * b14 + a15 * b15;
+            };
+            this.createVMatrix = function (center, alph, beta, length) {
+                var buf = this.create();
+                var cameraX = center[0] + length * Math.cos(beta) * Math.sin(alph);
+                var cameraY = center[1] + length * Math.sin(beta);
+                var cameraZ = center[2] + length * Math.cos(beta) * Math.cos(alph);
+                this.rotateY(buf, -alph, buf);
+                this.rotateX(buf, beta, buf);
+                this.translate(buf, [-cameraX, -cameraY, -cameraZ], buf);
+                return buf;
+            };
+            this.createPMatrix = function (fovy, aspect, near, far) {
+                var buf = this.create();
+                var t = near * Math.tan(fovy / 2);
+                var r = t * aspect;
+                var a = r * 2, b = t * 2, c = far - near;
+                buf[0] = near * 2 / a;
+                buf[1] = 0;
+                buf[2] = 0;
+                buf[3] = 0;
+                buf[4] = 0;
+                buf[5] = near * 2 / b;
+                buf[6] = 0;
+                buf[7] = 0;
+                buf[8] = 0;
+                buf[9] = 0;
+                buf[10] = -(far + near) / c;
+                buf[11] = -1;
+                buf[12] = 0;
+                buf[13] = 0;
+                buf[14] = -(far * near * 2) / c;
+                buf[15] = 0;
+                return buf;
+            };
+        };
+        var Matrix4x4 = new _Matrix4x4();
+
+        function Object3D() {
+            this.position = [];
+            this.normal = [];
+            this.index = [];
+
+            this.color = [];
+            this.shininess = [];
+
+            this.positionVBO;
+            this.normalVBO;
+            this.colorVBO;
+            this.shininessVBO;
+            this.indexIBO;
+            this.programId = -1;
+
+            this.mMatrix = Matrix4x4.create();
+
+            this.set = function (material, useLighting) {
+                if (this.position.length % 3 != 0) {
+                    console.log("Position has wrong length.");
+                    return;
+                }
+                if (!material.color || !material.color.length || material.color.length < 4) {
+                    material.color = [1.0, 1.0, 1.0, 1.0];
+                }
+                if (!material.shininess || !material.shininess.length || material.shininess.length == 0) {
+                    material.shininess = [0.0];
+                }
+                if (material.color.length / 4 == 1) {
+                    this.color = material.color;
+                    this.shininess = material.shininess;
+                    if (!useLighting) {
+                        this.positionVBO = BufferUtil.createVBO(this.position);
+                        this.indexIBO = BufferUtil.createIBO(this.index);
+                        this.programId = 0;
+                    }
+                    else {
+                        this.normal = new Array(this.position.length);
+                        this.normal.fill(0);
+                        for (var i = 0; i < this.index.length; i += 3) {
+                            var a = this.index[i];
+                            var b = this.index[i + 1];
+                            var c = this.index[i + 2];
+                            var x1 = this.position[a * 3], x2 = this.position[b * 3], x3 = this.position[c * 3];
+                            var y1 = this.position[a * 3 + 1], y2 = this.position[b * 3 + 1], y3 = this.position[c * 3 + 1];
+                            var z1 = this.position[a * 3 + 2], z2 = this.position[b * 3 + 2], z3 = this.position[c * 3 + 2];
+                            var xx1 = x1 - x2, yy1 = y1 - y2, zz1 = z1 - z2;
+                            var xx2 = x3 - x2, yy2 = y3 - y2, zz2 = z3 - z2;
+                            var bufnorm = [yy2 * zz1 - zz2 * yy1, zz2 * xx1 - xx2 * zz1, xx2 * yy1 - yy2 * xx1];
+                            var length = Math.sqrt(bufnorm[0] * bufnorm[0] + bufnorm[1] * bufnorm[1] + bufnorm[2] * bufnorm[2]);
+                            if (length != 0) {
+                                bufnorm[0] /= length;
+                                bufnorm[1] /= length;
+                                bufnorm[2] /= length;
+                            }
+                            this.normal[a * 3] += bufnorm[0];
+                            this.normal[a * 3 + 1] += bufnorm[1];
+                            this.normal[a * 3 + 2] += bufnorm[2];
+                            this.normal[b * 3] += bufnorm[0];
+                            this.normal[b * 3 + 1] += bufnorm[1];
+                            this.normal[b * 3 + 2] += bufnorm[2];
+                            this.normal[c * 3] += bufnorm[0];
+                            this.normal[c * 3 + 1] += bufnorm[1];
+                            this.normal[c * 3 + 2] += bufnorm[2];
+                        }
+                        this.positionVBO = BufferUtil.createVBO(this.position);
+                        this.normalVBO = BufferUtil.createVBO(this.normal);
+                        this.indexIBO = BufferUtil.createIBO(this.index);
+
+                        this.programId = 2;
+                    }
+                }
+                else {
+                    if (material.color.length * 3 < this.position.length * 4) {
+                        while (material.color.length * 3 == this.position.length * 4) {
+                            material.color.push(1.0);
+                        }
+                    }
+                    else if (material.color.length * 3 > this.position.length * 4) {
+                        while (material.color.length * 3 == this.position.length * 4) {
+                            material.color.pop();
+                        }
+                    }
+                    if (material.shininess.length * 3 < this.position.length) {
+                        while (material.shininess.length * 3 == this.position.length) {
+                            material.shininess.push(0.0);
+                        }
+                    }
+                    else if (material.shininess.length * 3 > this.position.length) {
+                        while (material.shininess.length * 3 == this.position.length) {
+                            material.shininess.pop();
+                        }
+                    }
+
+                    if (!useLighting) {
+                        this.positionVBO = BufferUtil.createVBO(this.position);
+                        this.colorVBO = BufferUtil.createVBO(material.color);
+                        this.indexIBO = BufferUtil.createIBO(this.index);
+
+                        this.programId = 1;
+                    } else {
+                        this.normal = new Array(this.position.length);
+                        this.normal.fill(0);
+                        for (var i = 0; i < this.index.length; i += 3) {
+                            var a = this.index[i];
+                            var b = this.index[i + 1];
+                            var c = this.index[i + 2];
+                            var x1 = this.position[a * 3], x2 = this.position[b * 3], x3 = this.position[c * 3];
+                            var y1 = this.position[a * 3 + 1], y2 = this.position[b * 3 + 1], y3 = this.position[c * 3 + 1];
+                            var z1 = this.position[a * 3 + 2], z2 = this.position[b * 3 + 2], z3 = this.position[c * 3 + 2];
+                            var xx1 = x1 - x2, yy1 = y1 - y2, zz1 = z1 - z2;
+                            var xx2 = x3 - x2, yy2 = y3 - y2, zz2 = z3 - z2;
+                            var bufnorm = [yy1 * zz2 - zz1 * yy2, zz1 * xx2 - xx1 * zz2, xx1 * yy2 - yy1 * xx2];
+                            this.normal[a * 3] += bufnorm[0];
+                            this.normal[a * 3 + 1] += bufnorm[1];
+                            this.normal[a * 3 + 2] += bufnorm[2];
+                            this.normal[b * 3] += bufnorm[0];
+                            this.normal[b * 3 + 1] += bufnorm[1];
+                            this.normal[b * 3 + 2] += bufnorm[2];
+                            this.normal[c * 3] += bufnorm[0];
+                            this.normal[c * 3 + 1] += bufnorm[1];
+                            this.normal[c * 3 + 2] += bufnorm[2];
+                        }
+                        this.positionVBO = BufferUtil.createVBO(this.position);
+                        this.colorVBO = BufferUtil.createVBO(material.color);
+                        this.shininessVBO = BufferUtil.createVBO(material.shininess);
+                        this.normalVBO = BufferUtil.createVBO(this.normal);
+                        this.indexIBO = BufferUtil.createIBO(this.index);
+
+                        this.programId = 3;
+                    }
+                }
+            };
+
+            this.translate = function (a) {
+                for (var i = 0; i < this.position.length; i += 3) {
+                    this.position[i] += a[0];
+                    this.position[i + 1] += a[1];
+                    this.position[i + 2] += a[2];
+                }
+            };
+
+            this.merge = function (o) {
+                var add = this.position.length / 3;
+                this.position = this.position.concat(o.position);
+                for (var i = 0; i < o.index.length; i++) {
+                    this.index.push(o.index[i] + add);
+                }
+            };
+
+        }
+
+        function _Geometry() {
+            this.cube = function (size) {
+                var buf = new Object3D();
+                buf.position = [
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], 0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], 0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2]
+                ];
+                buf.index = [
+                    0, 1, 2,
+                    3, 4, 5,
+                    6, 7, 8,
+                    9, 10, 11,
+                    12, 13, 14,
+                    15, 16, 17,
+                    18, 19, 20,
+                    21, 22, 23,
+                    24, 25, 26,
+                    27, 28, 29,
+                    30, 31, 32,
+                    33, 34, 35,
+                ]
+                return buf;
+            };
+
+            this.piramid = function (size) {
+                var buf = new Object3D();
+                buf.position = [
+                    0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], 0.5 * size[2],
+                    0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    -0.5 * size[0], -0.5 * size[1], -0.5 * size[2],
+                    0.0, 0.5 * size[1], 0.0
+                ];
+                buf.index = [
+                    0, 1, 2,
+                    3, 2, 1,
+                    0, 4, 1,
+                    1, 4, 3,
+                    3, 4, 2,
+                    2, 4, 0
+                ]
+                return buf;
+            };
+
+            this.sphere = function (r) {
+                var buf = new Object3D();
+                for (var f1 = 0; f1 <= 50; f1++) {
+                    var rad = Math.PI * (f1 / 50);
+                    var ry = Math.cos(rad);
+                    var rr = Math.sin(rad);
+                    for (var f2 = 0; f2 <= 50; f2++) {
+                        var tr = Math.PI * 2 / 50 * f2;
+                        var tx = 0.5 * rr * r[0] * Math.cos(tr);
+                        var ty = 0.5 * ry * r[1];
+                        var tz = 0.5 * rr * r[2] * Math.sin(tr);
+                        buf.position.push(tx, ty, tz);
+                    }
+                }
+                r = 0;
+                for (var f1 = 0; f1 < 50; f1++) {
+                    for (var f2 = 0; f2 < 50; f2++) {
+                        var bufidx = 51 * f1 + f2;
+                        buf.index.push(bufidx, bufidx + 1, bufidx + 52);
+                        buf.index.push(bufidx, bufidx + 52, bufidx + 51);
+                    }
+                }
+                return buf;
+            };
+
+            this.plain = function (size) {
+                var buf = new Object3D();
+                buf.position = [
+                    0.5 * size[0], 0, 0.5 * size[1],
+                    -0.5 * size[0], 0, 0.5 * size[1],
+                    0.5 * size[0], 0, -0.5 * size[1],
+                    -0.5 * size[0], 0, -0.5 * size[1],
+                ];
+                buf.index = [
+                    0, 2, 1,
+                    3, 1, 2,
+                ]
+                return buf;
+            }
+        }
+        var Geometry = new _Geometry();
+
+        function WebGLManager(id) {
+            //Set Up
+            this.canvas = document.getElementById(id);
+            gl = this.canvas.getContext("webgl") || this.canvas.getContext("experimental-webgl");
+            this.shaders = [];
+            this.currentShaderId = -1;
+            this.attLoc = {
+                position: -1,
+                normal: -1,
+                color: -1,
+                shininess: -1
+            };
+            this.uniLoc = {
+                color: -1,
+                mMatrix: -1,
+                vMatrix: -1,
+                vMatrix2: -1,
+                pMatrix: -1,
+                shininess: -1,
+                sunLightCol: -1,
+                sunLightPos: -1,
+                defaultLightCol: -1
+            };
+
+            this.objects = [];
+            this.lightData = {
+                sunLightCol: [0.6, 0.6, 0.6, 1.0],
+                sunLightPos: [0, 1, 0],
+                defaultLightCol: [0.6, 0.6, 0.6, 1.0]
+            }
+
+            this.mMatrix = Matrix4x4.create();
+            this.vMatrix = Matrix4x4.createVMatrix([0, 0, 0], 0, 0, 5);
+            this.vMatrix2 = Matrix4x4.createVMatrix([0, 0, 0], 0, 0, 5);
+            this.pMatrix = Matrix4x4.createPMatrix(90 * DEG2RAD, 1, 0.1, 100);
+
+            //Private Function
+            this.createProgramById = function (v_id, f_id) {
+                return this.createProgram(this.compileShaderById(v_id), this.compileShaderById(f_id));
+            };
+            this.createProgram = function (vs, fs) {
+                var program = gl.createProgram();
+                gl.attachShader(program, vs);
+                gl.attachShader(program, fs);
+                gl.linkProgram(program);
+                if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    return program;
+                } else {
+                    console.log(gl.getProgramInfoLog(program));
+                    alert("Link Error");
+                }
+            };
+            this.compileShaderById = function (id) {
+                var shader;
+                var scriptElement = document.getElementById(id);
+                if (!scriptElement) return;
+                if (scriptElement.type == "vertex") {
+                    shader = gl.createShader(gl.VERTEX_SHADER);
+                }
+                else if (scriptElement.type == "fragment") {
+                    shader = gl.createShader(gl.FRAGMENT_SHADER);
+                }
+                else {
+                    return;
+                }
+                gl.shaderSource(shader, scriptElement.text);
+                gl.compileShader(shader);
+                if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    return shader;
+                }
+                else {
+                    console.log(gl.getShaderInfoLog(shader));
+                    alert("Shader Error");
+                }
+            };
+
+            this.initShader = function () {
+                this.shaders.push(this.createProgramById("vertex1", "fragment1"));
+                this.shaders.push(this.createProgramById("vertex2", "fragment1"));
+                this.shaders.push(this.createProgramById("vertex3", "fragment2"));
+                this.shaders.push(this.createProgramById("vertex4", "fragment2"));
+                this.shaders.push(this.createProgramById("vertex_shadow", "fragment_shadow"));
+            };
+            this.chooseShader = function (id) {
+                gl.useProgram(this.shaders[id]);
+                this.attLoc = {
+                    position: -1,
+                    normal: -1,
+                    color: -1,
+                    shininess: -1
+                };
+                this.uniLoc = {
+                    color: -1,
+                    mMatrix: -1,
+                    vMatrix: -1,
+                    vMatrix2: -1,
+                    pMatrix: -1,
+                    shininess: -1,
+                    sunLightCol: -1,
+                    sunLightPos: -1,
+                    defaultLightCol: -1
+                };
+                switch (id) {
+                    case 0:
+                        this.attLoc.position = gl.getAttribLocation(this.shaders[0], "position");
+                        this.uniLoc.color = gl.getUniformLocation(this.shaders[0], "color");
+
+                        this.uniLoc.mMatrix = gl.getUniformLocation(this.shaders[0], "mMatrix");
+                        this.uniLoc.vMatrix = gl.getUniformLocation(this.shaders[0], "vMatrix");
+                        this.uniLoc.pMatrix = gl.getUniformLocation(this.shaders[0], "pMatrix");
+
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix, false, this.vMatrix);
+                        gl.uniformMatrix4fv(this.uniLoc.pMatrix, false, this.pMatrix);
+                        break;
+                    case 1:
+                        this.attLoc.position = gl.getAttribLocation(this.shaders[1], "position");
+                        this.attLoc.color = gl.getAttribLocation(this.shaders[1], "color");
+
+                        this.uniLoc.mMatrix = gl.getUniformLocation(this.shaders[1], "mMatrix");
+                        this.uniLoc.vMatrix = gl.getUniformLocation(this.shaders[1], "vMatrix");
+                        this.uniLoc.pMatrix = gl.getUniformLocation(this.shaders[1], "pMatrix");
+
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix, false, this.vMatrix);
+                        gl.uniformMatrix4fv(this.uniLoc.pMatrix, false, this.pMatrix);
+                        break;
+                    case 2:
+                        this.attLoc.position = gl.getAttribLocation(this.shaders[2], "position");
+                        this.attLoc.normal = gl.getAttribLocation(this.shaders[2], "normal");
+
+                        this.uniLoc.color = gl.getUniformLocation(this.shaders[2], "color");
+                        this.uniLoc.shininess = gl.getUniformLocation(this.shaders[2], "shininess");
+                        this.uniLoc.sunLightCol = gl.getUniformLocation(this.shaders[2], "sunLightCol");
+                        this.uniLoc.sunLightPos = gl.getUniformLocation(this.shaders[2], "sunLightPos");
+                        this.uniLoc.defaultLightCol = gl.getUniformLocation(this.shaders[2], "defaultLightCol");
+                        this.uniLoc.mMatrix = gl.getUniformLocation(this.shaders[2], "mMatrix");
+                        this.uniLoc.vMatrix = gl.getUniformLocation(this.shaders[2], "vMatrix");
+                        this.uniLoc.vMatrix2 = gl.getUniformLocation(this.shaders[2], "vMatrix2");
+                        this.uniLoc.pMatrix = gl.getUniformLocation(this.shaders[2], "pMatrix");
+
+                        gl.uniform4f(this.uniLoc.sunLightCol, this.lightData.sunLightCol[0], this.lightData.sunLightCol[1], this.lightData.sunLightCol[2], this.lightData.sunLightCol[3]);
+                        gl.uniform3f(this.uniLoc.sunLightPos, this.lightData.sunLightPos[0], this.lightData.sunLightPos[1], this.lightData.sunLightPos[2]);
+                        gl.uniform4f(this.uniLoc.defaultLightCol, this.lightData.defaultLightCol[0], this.lightData.defaultLightCol[1], this.lightData.defaultLightCol[2], this.lightData.defaultLightCol[3]);
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix, false, this.vMatrix);
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix2, false, this.vMatrix2);
+                        gl.uniformMatrix4fv(this.uniLoc.pMatrix, false, this.pMatrix);
+
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, frameBuffer.t);
+                        break;
+                    case 3:
+                        this.attLoc.position = gl.getAttribLocation(this.shaders[3], "position");
+                        this.attLoc.normal = gl.getAttribLocation(this.shaders[3], "normal");
+                        this.attLoc.color = gl.getAttribLocation(this.shaders[3], "color");
+                        this.attLoc.shininess = gl.getAttribLocation(this.shaders[3], "shininess");
+
+                        this.uniLoc.sunLightCol = gl.getUniformLocation(this.shaders[3], "sunLightCol");
+                        this.uniLoc.sunLightPos = gl.getUniformLocation(this.shaders[3], "sunLightPos");
+                        this.uniLoc.defaultLightCol = gl.getUniformLocation(this.shaders[3], "defaultLightCol");
+                        this.uniLoc.mMatrix = gl.getUniformLocation(this.shaders[3], "mMatrix");
+                        this.uniLoc.vMatrix = gl.getUniformLocation(this.shaders[3], "vMatrix");
+                        this.uniLoc.vMatrix2 = gl.getUniformLocation(this.shaders[3], "vMatrix2");
+                        this.uniLoc.pMatrix = gl.getUniformLocation(this.shaders[3], "pMatrix");
+
+                        gl.uniform4f(this.uniLoc.sunLightCol, this.lightData.sunLightCol[0], this.lightData.sunLightCol[1], this.lightData.sunLightCol[2], this.lightData.sunLightCol[3]);
+                        gl.uniform3f(this.uniLoc.sunLightPos, this.lightData.sunLightPos[0], this.lightData.sunLightPos[1], this.lightData.sunLightPos[2]);
+                        gl.uniform4f(this.uniLoc.defaultLightCol, this.lightData.defaultLightCol[0], this.lightData.defaultLightCol[1], this.lightData.defaultLightCol[2], this.lightData.defaultLightCol[3]);
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix, false, this.vMatrix);
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix2, false, this.vMatrix2);
+                        gl.uniformMatrix4fv(this.uniLoc.pMatrix, false, this.pMatrix);
+
+                        gl.activeTexture(gl.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_2D, frameBuffer.t);
+                        break;
+                    case 4:
+                        this.attLoc.position = gl.getAttribLocation(this.shaders[4], "position");
+                        this.uniLoc.mMatrix = gl.getUniformLocation(this.shaders[4], "mMatrix");
+                        this.uniLoc.vMatrix2 = gl.getUniformLocation(this.shaders[4], "vMatrix2");
+
+                        gl.uniformMatrix4fv(this.uniLoc.vMatrix2, false, this.vMatrix2);
+                        break;
+                }
+            };
+
+            this.addObject = function (o) {
+                this.objects.push(o);
+                this.objects.sort(function (a, b) { return a.programId - b.programId; });
+            };
+
+            this.draw = function () {
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                this.currentShaderId = -1;
+                for (var a = 0; a < this.objects.length; a++) {
+                    i = this.objects[a];
+                    if (i.programId != this.currentShaderId) {
+                        this.currentShaderId = i.programId;
+                        this.chooseShader(this.currentShaderId);
+                    }
+                    switch (i.programId) {
+                        case 0:
+                            BufferUtil.bindVBO3(this.attLoc.position, i.positionVBO);
+                            BufferUtil.bindIBO(i.indexIBO);
+
+                            gl.uniform4f(this.uniLoc.color, i.color[0], i.color[1], i.color[2], i.color[3]);
+                            break;
+                        case 1:
+                            BufferUtil.bindVBO3(this.attLoc.position, i.positionVBO);
+                            BufferUtil.bindVBO4(this.attLoc.color, i.colorVBO);
+                            BufferUtil.bindIBO(i.indexIBO);
+                            break;
+                        case 2:
+                            BufferUtil.bindVBO3(this.attLoc.position, i.positionVBO);
+                            BufferUtil.bindVBO3(this.attLoc.normal, i.normalVBO);
+                            BufferUtil.bindIBO(i.indexIBO);
+
+                            gl.uniform4f(this.uniLoc.color, i.color[0], i.color[1], i.color[2], i.color[3]);
+                            gl.uniform1f(this.uniLoc.shininess, i.shininess[0]);
+                            break;
+                        case 3:
+                            BufferUtil.bindVBO3(this.attLoc.position, i.positionVBO);
+                            BufferUtil.bindVBO3(this.attLoc.normal, i.normalVBO);
+                            BufferUtil.bindVBO4(this.attLoc.color, i.colorVBO);
+                            BufferUtil.bindVBO1(this.attLoc.shininess, i.shininessVBO);
+                            BufferUtil.bindIBO(i.indexIBO);
+                            break;
+                    }
+
+                    gl.uniformMatrix4fv(this.uniLoc.mMatrix, false, i.mMatrix);
+
+                    gl.drawElements(gl.TRIANGLES, i.index.length, gl.UNSIGNED_SHORT, 0);
+                }
+                gl.flush();
+            };
+
+            this.createFrameBuffer = function(width, height) {
+                var frameBuffer = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+                var depthRenderBuffer = gl.createRenderbuffer();
+                gl.bindRenderbuffer(gl.RENDERBUFFER, depthRenderBuffer);
+                gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthRenderBuffer);
+                var fTexture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, fTexture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fTexture, 0);
+                gl.bindTexture(gl.TEXTURE_2D, null);
+                gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                return { f: frameBuffer, d: depthRenderBuffer, t: fTexture };
+            }
+
+            var frameBuffer = this.createFrameBuffer(1024, 1024);
+            this.shadowMap = function () {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer.f);
+                gl.viewport(0.0, 0.0, 1024.0, 1024.0);
+                gl.clearColor(1.0, 1.0, 1.0, 1.0);
+                gl.clearDepth(1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                this.chooseShader(4);
+                for (var a = 0; a < this.objects.length; a++) {
+                    i = this.objects[a];
+                    BufferUtil.bindVBO3(this.attLoc.position, i.positionVBO);
+                    BufferUtil.bindIBO(i.indexIBO);
+                    gl.uniformMatrix4fv(this.uniLoc.mMatrix, false, i.mMatrix);
+                    gl.drawElements(gl.TRIANGLES, i.index.length, gl.UNSIGNED_SHORT, 0);
+                }
+                gl.flush();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                gl.viewport(0.0, 0.0, this.canvas.width, this.canvas.height);
+                gl.clearColor(0.3, 0.4, 1.0, 1.0);
+            };
+
+            this.setVMatrix = function (a, b, c, d) {
+                this.vMatrix = Matrix4x4.createVMatrix(a, b, c, d);
+            }
+
+            this.setVMatrix2 = function (a, b, c, d) {
+                this.vMatrix2 = Matrix4x4.createVMatrix(a, b, c, d);
+            }
+
+            //Initialize
+            gl.clearColor(0.3, 0.4, 1.0, 1.0);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.depthFunc(gl.LEQUAL);
+            gl.enable(gl.DEPTH_TEST);
+            this.initShader();
+        }
+
+        function _Distance() {
+            this.point_triangle = function (center, p1, p2, p3, r) {
+                var ocx = p3[0] - center[0];
+                var ocy = p3[1] - center[1];
+                var ocz = p3[2] - center[2];
+                var cax = p1[0] - p3[0];
+                var cay = p1[1] - p3[1];
+                var caz = p1[2] - p3[2];
+                var cbx = p2[0] - p3[0];
+                var cby = p2[1] - p3[1];
+                var cbz = p2[2] - p3[2];
+                var a = cax * cax + cay * cay + caz * caz;
+                var b = 2 * (cax * cbx + cay * cby + caz * cbz);
+                var c = cbx * cbx + cby * cby + cbz * cbz;
+                var d = 2 * (ocx * cax + ocy * cay + ocz * caz);
+                var e = 2 * (ocx * cbx + ocy * cby + ocz * cbz);
+                var f = ocx * ocx + ocy * ocy + ocz * ocz;
+
+                var hS = (2 * c * d - b * e) / (b * b - 4 * a * c);
+                var hT = (2 * a * e - b * d) / (b * b - 4 * a * c);
+                if (r * r < a * hS * hS + b * hS * hT + c * hT * hT + d * hS + e * hT + f) return -1;
+                var chx = hS * cax + hT * cbx;
+                var chy = hS * cay + hT * cby;
+                var chz = hS * caz + hT * cbz;
+                var S, T;
+                if (hS >= 0) {
+                    if (hT >= 0) {
+                        if (hS + hT > 1) {
+                            hS = -(b - 2 * c + d - e) / (2 * (a - b + c));
+                            S = Math.max(Math.min(hS, 1), 0);
+                            T = 1 - S;
+                        }
+                        else {
+                            S = hS;
+                            T = hT;
+                        }
+                    }
+                    else {
+                        if (hS + hT > 1) {
+                            S = 1;
+                            T = 0;
+                        }
+                        else {
+                            T = 0;
+                            hS = -d / (2 * a);
+                            S = Math.max(Math.min(hS, 1), 0);
+                        }
+                    }
+                }
+                else {
+                    if (hT >= 0) {
+                        if (hS + hT > 1) {
+                            S = 0;
+                            T = 1;
+                        }
+                        else {
+                            S = 0;
+                            hT = -e / (2 * c);
+                            T = Math.max(Math.min(hT, 1), 0);
+                        }
+                    }
+                    else {
+                        S = 0;
+                        T = 0;
+                    }
+                }
+                var buf = a * S * S + b * S * T + c * T * T + d * S + e * T + f;
+                if (r * r < buf) return -1;
+                buf = Math.sqrt(buf);
+                return [(ocx + S * cax + T * cbx) / buf, (ocy + S * cay + T * cby) / buf, (ocz + S * caz + T * cbz) / buf, buf];
+            };
+
+            this.pickup_triangle = function (center, object, r) {
+                var result = [];
+                for (var i = 0; i < object.index.length / 3; i++) {
+                    var buf = this.point_triangle(center, object.position.slice(object.index[i * 3] * 3, object.index[i * 3] * 3 + 3), object.position.slice(object.index[i * 3 + 1] * 3, object.index[i * 3 + 1] * 3 + 3), object.position.slice(object.index[i * 3 + 2] * 3, object.index[i * 3 + 2] * 3 + 3), r);
+                    if (buf !== -1) {
+                        result.push(object.position.slice(object.index[i * 3] * 3, object.index[i * 3] * 3 + 3), object.position.slice(object.index[i * 3 + 1] * 3, object.index[i * 3 + 1] * 3 + 3), object.position.slice(object.index[i * 3 + 2] * 3, object.index[i * 3 + 2] * 3 + 3));
+                    }
+                }
+                return result;
+            }
+        }
+        var Distance = new _Distance();
+
+    </script>
+    <script type="text/javascript">
+        function _Character() {
+            this.x = 0;
+            this.y = 2;
+            this.z = 0;
+            this.vx = 0;
+            this.vy = 0;
+            this.vz = 0;
+            this.ax = 0;
+            this.ay = -9.8;
+            this.az = 0;
+
+            this.move = function () {
+                //initialize
+                var triangles = [];
+                triangles = triangles.concat(Distance.pickup_triangle([this.x, this.y, this.z], greens, 0.41));
+                triangles = triangles.concat(Distance.pickup_triangle([this.x, this.y, this.z], grays, 0.41));
+                //from key input
+                if (pressedKeys[6]) {
+                    this.ax -= 10 * Math.cos(alph * DEG2RAD);
+                    this.az += 10 * Math.sin(alph * DEG2RAD);
+                }
+                if (pressedKeys[7]) {
+                    this.ax += 10 * Math.cos(alph * DEG2RAD);
+                    this.az -= 10 * Math.sin(alph * DEG2RAD);
+                }
+                if (pressedKeys[4]) {
+                    this.ax -= 10 * Math.sin(alph * DEG2RAD);
+                    this.az -= 10 * Math.cos(alph * DEG2RAD);
+                }
+                if (pressedKeys[5]) {
+                    this.ax += 10 * Math.sin(alph * DEG2RAD);
+                    this.az += 10 * Math.cos(alph * DEG2RAD);
+                }
+                this.vx += this.ax * 0.02;
+                this.vy += this.ay * 0.02;
+                this.vz += this.az * 0.02;
+                if (this.vx > 2.5) this.vx = 2.5;
+                if (this.vy > 7) this.vy = 7;
+                if (this.vz > 2.5) this.vz = 2.5;
+                if (this.vx < -2.5) this.vx = -2.5;
+                if (this.vy < -7) this.vy = -7;
+                if (this.vz < -2.5) this.vz = -2.5;
+                this.x += this.vx * 0.02;
+                this.y += this.vy * 0.02;
+                this.z += this.vz * 0.02;
+
+                var can_jump = false;
+                //from triangles
+                while (true) {
+                    var min = [0, 0, 0, -1];
+                    for (var i = 0; i < triangles.length / 3; i++) {
+                        var buf = Distance.point_triangle([this.x, this.y, this.z], triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2], 0.40);
+                        if (buf === -1) continue;
+                        if (min[3] == -1 || min > buf[3]) {
+                            min[0] = buf[0];
+                            min[1] = buf[1];
+                            min[2] = buf[2];
+                            min[3] = buf[3];
+                        }
+                    }
+                    if (min[3] != -1) {
+                        this.x -= min[0] * 0.01;
+                        this.y -= min[1] * 0.01;
+                        this.z -= min[2] * 0.01;
+                        this.vx *= (1.0 - Math.abs(min[0]) * 0.9);
+                        this.vy *= (1.0 - Math.abs(min[1]) * 0.9);
+                        this.vz *= (1.0 - Math.abs(min[2]) * 0.9);
+                        if (min[1] < -0.72) {
+                            can_jump = true;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                this.ax = 0; this.az = 0;
+                if (can_jump) {
+                    if (pressedKeys[8]) this.vy = 7;
+                    if (!pressedKeys[6] && !pressedKeys[7] && !pressedKeys[4] && !pressedKeys[5]) {
+                        this.vx *= 0.7;
+                        this.vz *= 0.7;
+                    }
+                    this.ax = -this.vx * 3;
+                    this.az = -this.vz * 3;
+                }
+            };
+        }
+    </script>
+    <script type="text/javascript">
+        var grays, greens;
+
+        function green(pos, idx) {
+            greens = new Object3D();
+            greens.position = pos;
+            greens.index = idx;
+            greens.set({ color: [30 / 255, 100 / 255, 50 / 255, 1.0], shininess: [0.1] }, true);
+            wgm.addObject(greens);
+        }
+        function gray(pos, idx) {
+            grays = new Object3D();
+            grays.position = pos;
+            grays.index = idx;
+            grays.set({ color: [80 / 255, 80 / 255, 80 / 255, 1.0], shininess: [0.1] }, true);
+            wgm.addObject(grays);
+        }
+    </script>
+    <script type="text/javascript">
+        var wgm;
+
+        var ball;
+        function onLoad() {
+            wgm = new WebGLManager("canvas");
+            wgm.lightData.sunLightPos = [-5, 10, -5];
+
+            greens = new Object3D();
+            gray(objPos, objIdx);
+
+            ball = Geometry.sphere([0.8, 0.8, 0.8]);
+            ball.set({ color: [0.2, 0.2, 1.0, 1.0], shininess: [1.0] }, true);
+            wgm.addObject(ball);
+
+            window.addEventListener("keydown", onKeyDown);
+            window.addEventListener("keyup", onKeyUp);
+
+            onLoop();
+        }
+
+        var alph = 45, beta = 60;
+        var character = new _Character();
+        function onLoop() {
+            if (pressedKeys[0]) beta += 1;
+            if (pressedKeys[1]) beta -= 1;
+            if (pressedKeys[2]) alph -= 1;
+            if (pressedKeys[3]) alph += 1;
+            character.move();
+
+            wgm.setVMatrix([character.x, character.y, character.z], alph * DEG2RAD, beta * DEG2RAD, 3.0);
+            wgm.setVMatrix2([character.x, character.y, character.z], 0.7854 + 3.1416, 0.9553, 1);
+
+            Matrix4x4.translate(Matrix4x4.create(), [character.x, character.y, character.z], ball.mMatrix);
+
+            wgm.shadowMap();
+            wgm.draw();
+            setTimeout(onLoop, 20);
+        }
+
+        var pressedKeys = [];
+        function onKeyDown(e) {
+            switch (e.keyCode) {
+                case 38://up
+                    pressedKeys[4] = true;
+                    e.preventDefault();
+                    break;
+                case 87://w
+                    pressedKeys[0] = true;
+                    e.preventDefault();
+                    break;
+                case 40://down
+                    pressedKeys[5] = true;
+                    e.preventDefault();
+                    break;
+                case 83://s
+                    pressedKeys[1] = true;
+                    e.preventDefault();
+                    break;
+                case 37://left
+                    pressedKeys[6] = true;
+                    e.preventDefault();
+                    break;
+                case 65://a
+                    pressedKeys[2] = true;
+                    e.preventDefault();
+                    break;
+                case 39://right
+                    pressedKeys[7] = true;
+                    e.preventDefault();
+                    break;
+                case 68://d
+                    pressedKeys[3] = true;
+                    e.preventDefault();
+                    break;
+                case 32:
+                    pressedKeys[8] = true;
+                    e.preventDefault();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function onKeyUp(e) {
+            switch (e.keyCode) {
+                case 38://up
+                    pressedKeys[4] = false;
+                    e.preventDefault();
+                    break;
+                case 87://w
+                    pressedKeys[0] = false;
+                    e.preventDefault();
+                    break;
+                case 40://down
+                    pressedKeys[5] = false;
+                    e.preventDefault();
+                    break;
+                case 83://s
+                    pressedKeys[1] = false;
+                    e.preventDefault();
+                    break;
+                case 37://left
+                    pressedKeys[6] = false;
+                    e.preventDefault();
+                    break;
+                case 65://a
+                    pressedKeys[2] = false;
+                    e.preventDefault();
+                    break;
+                case 39://right
+                    pressedKeys[7] = false;
+                    e.preventDefault();
+                    break;
+                case 68://d
+                    pressedKeys[3] = false;
+                    e.preventDefault();
+                    break;
+                case 32:
+                    pressedKeys[8] = false;
+                    e.preventDefault();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    </script>
+</head>
+<body onload="onLoad()">
+    <canvas id ="canvas" width="600" height="600"></canvas>
+    <p>上下左右キー：移動</p>
+    <p>スペースキー：ジャンプ</p>
+    <p>WASD：視点変更</p>
+    <p>結構負荷のかかる処理を行っていますので、動作が変になるかもしれません。どうかご了承を。</p>
+</body>
+</html>
