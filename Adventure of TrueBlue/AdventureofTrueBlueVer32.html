@@ -1207,35 +1207,35 @@
         function onKeyDown(e) {
             switch (e.keyCode) {
                 case 38://up
-                    pressedKeys[4] = true;
-                    e.preventDefault();
-                    break;
-                case 87://w
                     pressedKeys[0] = true;
                     e.preventDefault();
                     break;
-                case 40://down
-                    pressedKeys[5] = true;
+                case 87://w
+                    pressedKeys[4] = true;
                     e.preventDefault();
                     break;
-                case 83://s
+                case 40://down
                     pressedKeys[1] = true;
                     e.preventDefault();
                     break;
-                case 37://left
-                    pressedKeys[6] = true;
+                case 83://s
+                    pressedKeys[5] = true;
                     e.preventDefault();
                     break;
-                case 65://a
+                case 37://left
                     pressedKeys[2] = true;
                     e.preventDefault();
                     break;
+                case 65://a
+                    pressedKeys[6] = true;
+                    e.preventDefault();
+                    break;
                 case 39://right
-                    pressedKeys[7] = true;
+                    pressedKeys[3] = true;
                     e.preventDefault();
                     break;
                 case 68://d
-                    pressedKeys[3] = true;
+                    pressedKeys[7] = true;
                     e.preventDefault();
                     break;
                 case 32:
@@ -1250,35 +1250,35 @@
         function onKeyUp(e) {
             switch (e.keyCode) {
                 case 38://up
-                    pressedKeys[4] = false;
-                    e.preventDefault();
-                    break;
-                case 87://w
                     pressedKeys[0] = false;
                     e.preventDefault();
                     break;
-                case 40://down
-                    pressedKeys[5] = false;
+                case 87://w
+                    pressedKeys[4] = false;
                     e.preventDefault();
                     break;
-                case 83://s
+                case 40://down
                     pressedKeys[1] = false;
                     e.preventDefault();
                     break;
-                case 37://left
-                    pressedKeys[6] = false;
+                case 83://s
+                    pressedKeys[5] = false;
                     e.preventDefault();
                     break;
-                case 65://a
+                case 37://left
                     pressedKeys[2] = false;
                     e.preventDefault();
                     break;
+                case 65://a
+                    pressedKeys[6] = false;
+                    e.preventDefault();
+                    break;
                 case 39://right
-                    pressedKeys[7] = false;
+                    pressedKeys[3] = false;
                     e.preventDefault();
                     break;
                 case 68://d
-                    pressedKeys[3] = false;
+                    pressedKeys[7] = false;
                     e.preventDefault();
                     break;
                 case 32:
@@ -1294,9 +1294,9 @@
 </head>
 <body onload="onLoad()">
     <canvas id ="canvas" width="600" height="600"></canvas>
-    <p>上下左右キー：移動</p>
+    <p>WASD：移動</p>
     <p>スペースキー：ジャンプ</p>
-    <p>WASD：視点変更</p>
+    <p>上下左右キー：視点変更</p>
     <p>結構負荷のかかる処理を行っていますので、動作が変になるかもしれません。どうかご了承を。</p>
 </body>
 </html>
