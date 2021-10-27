@@ -203,8 +203,11 @@ function onLoop(){
     characterV[2]*=0.7;
   }
   if(ground == 1 || characterPos[1] < -5){
-    characterPos = [0.5, 0.5, 0.5];
+    document.getElementById("MessageDiv").style.display = "block";
+    endTime = performance.now();
+    document.getElementById("messageH1").innerText = "Game Over!!";
     characterV = [0.0, 0.0, 0.0];
+    gamestatus = -1;
   }
   else if(ground == 3){
     document.getElementById("MessageDiv").style.display = "block";
