@@ -9,6 +9,9 @@ var characterV = [0.0, 0.0, 0.0];
 var gamestatus = 0;
 var startTime;
 
+var LRswitch = false;
+var UDswitch = false;
+
 function getLocal(a){
   return a - Math.floor(a);
 }
@@ -203,11 +206,8 @@ function onLoop(){
     characterV[2]*=0.7;
   }
   if(ground == 1 || characterPos[1] < -5){
-    document.getElementById("MessageDiv").style.display = "block";
-    endTime = performance.now();
-    document.getElementById("messageH1").innerText = "Game Over!!";
+    characterPos = [0.5, 0.5, 0.5];
     characterV = [0.0, 0.0, 0.0];
-    gamestatus = -1;
   }
   else if(ground == 3){
     document.getElementById("MessageDiv").style.display = "block";
@@ -268,8 +268,10 @@ function onLoop(){
   }
 
   if((Math.abs(gamepad.axes[5]) + Math.abs(gamepad.axes[2])) > 0.1){
-    camera.alpha += gamepad.axes[2]*2;
-    camera.beta -= gamepad.axes[5]*2;
+    if(LRswitch) camera.alpha += gamepad.axes[2]*2;
+    else camera.alpha -= gamepad.axes[2]*2;
+    if(UDswitch) camera.beta += gamepad.axes[5]*2;
+    else camera.beta -= gamepad.axes[5]*2;
     if(camera.beta > 85)camera.beta = 85;
     if(camera.beta < -85)camera.beta = -85;
   }
@@ -770,6 +772,9 @@ function onStart(){
   gamestatus = 1;
   characterPos = [0.5, 0.5, 0.5];
   characterV = [0.0, 0.0, 0.0];
+
+  LRswitch = document.getElementById("LRswitch").checked;
+  UDswitch = document.getElementById("UDswitch").checked;
 
   startTime = performance.now();
   onLoop();
